@@ -1,10 +1,13 @@
 from PyQt5.QtGui import QColor, QFont, QPainterPath, QPen, QBrush
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem, QGraphicsProxyWidget
 from PyQt5.QtCore import *
 
 class QDMGraphicsNode(QGraphicsItem):
-    def __init__(self, node, title = "nodeGraphicsItem",  parent = None):
+    def __init__(self, node,  parent = None):
         super().__init__(parent)
+
+        self.node = node
+        self.content = self.node.content
 
         self.titleColor = Qt.GlobalColor.white
         self.titleFont = QFont("Helvetica", 10)
@@ -25,9 +28,20 @@ class QDMGraphicsNode(QGraphicsItem):
 
 
         self.initTitle()
-        self.title = title
+        self.title = self.node.title
+
+        self.initSockets()
+
+        self.initContent()
 
         self.initUI()
+
+    @property
+    def title(self): return self._title
+    @title.setter
+    def title(self, value):
+        self._title = value
+        self.titleItem.setPlainText(self._title)
 
 
     def initUI(self):
@@ -40,9 +54,22 @@ class QDMGraphicsNode(QGraphicsItem):
         self.titleItem.setFont(self.titleFont)
         self.titleItem.setPos(self.padding, 0)
 
+    def initContent(self):
+        self.grContent = QGraphicsProxyWidget(self)
+
+        self.content.setGeometry(self.edgeSize,
+                                 self.titleHeight + self.edgeSize,
+                                 self.width - 2 * self.edgeSize,
+                                 self.height - 2 * self.edgeSize - self.titleHeight)
+
+        self.grContent.setWidget(self.content)
+
+    def initSockets(self):
+        pass
+
     def boundingRect(self):
         return QRectF(
-            0, 0, 2 * self.edgeSize + self.width, 2 * self.edgeSize + self.height
+            0, 0, self.width, self.height
         ).normalized()
 
     def paint(self, painter, QStyle, widget = None):
@@ -71,9 +98,4 @@ class QDMGraphicsNode(QGraphicsItem):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(pathOutline.simplified())
 
-    @property
-    def title(self): return self._title
-    @title.setter
-    def title(self, value):
-        self._title = value
-        self.titleItem.setPlainText(self._title)
+
