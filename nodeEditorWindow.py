@@ -3,6 +3,8 @@ from idlelib.iomenu import encoding
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+
+from nodeEdge import Edge, EDGE_TYPE_DIRECT, EDGE_TYPE_BEZIER
 from nodeNode import Node
 from nodeGraphicsView import QDMGraphicsView
 from nodeScene import Scene
@@ -40,8 +42,7 @@ class NodeEditorWindow(QWidget):
         #set widget window title
         self.setWindowTitle('MNRB')
 
-        #add Nodes
-        node = Node(self.scene, "New Amazing Node", inputs = [1,1,1], outputs = [1])
+        self.addNodes()
 
        #display
         self.show()
@@ -54,3 +55,13 @@ class NodeEditorWindow(QWidget):
         stylesheet = file.readAll()
 
         QApplication.instance().setStyleSheet(str(stylesheet, encoding='utf-8'))
+
+    def addNodes(self):
+
+        # add Nodes
+        node = Node(self.scene, "New Amazing Node", inputs=[1, 1, 1], outputs=[1])
+        node2 = Node(self.scene, "Secon node", inputs=[2, 2], outputs=[3, 3, 3])
+        node2.setPosition(-350, -200)
+
+        edge1 = Edge(self.scene, node2.outputs[0], node.inputs[0], type=EDGE_TYPE_BEZIER)
+        edge2 = Edge(self.scene, node2.outputs[2], node.inputs[1], type=EDGE_TYPE_BEZIER)

@@ -21,7 +21,7 @@ class Node():
 
         counter = 0
         for item in inputs:
-            socket = Socket(node=self, index = counter, position = LEFT_BOTTOM)
+            socket = Socket(node=self, index = counter, position = LEFT_TOP)
             counter += 1
             self.inputs.append(socket)
 
@@ -31,14 +31,20 @@ class Node():
             counter += 1
             self.outputs.append(socket)
 
+    @property
+    def pos(self):
+        return self.grNode.pos()
 
     def getSocketPosition(self, index, position):
 
         x = 0 if position in (LEFT_TOP, LEFT_BOTTOM) else self.grNode.width
 
         if position in (LEFT_BOTTOM, RIGHT_BOTTOM):
-            y = self.grNode.height - index * self.socketSpacing
+            y = self.grNode.height - self.grNode.edgeSize - self.grNode.padding - index * self.socketSpacing
         else:
             y = self.grNode.titleHeight + self.grNode.padding + self.grNode.edgeSize + index * self.socketSpacing
 
-        return x, y
+        return [x, y]
+
+    def setPosition(self, x, y):
+        self.grNode.setPos(x, y)
