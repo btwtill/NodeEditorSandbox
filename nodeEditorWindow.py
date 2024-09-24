@@ -60,8 +60,11 @@ class NodeEditorWindow(QWidget):
 
         # add Nodes
         node = Node(self.scene, "New Amazing Node", inputs=[1, 1, 1], outputs=[1])
-        node2 = Node(self.scene, "Secon node", inputs=[2, 2], outputs=[3, 3, 3])
+        node2 = Node(self.scene, "Second node", inputs=[2, 2], outputs=[3, 3, 3])
         node2.setPosition(-350, -200)
+        node3  = Node(self.scene, "Third Node", inputs = [1, 1, 1, 1], outputs=[1, 1, 1])
+        node3.setPosition(100, -100)
 
-        edge1 = Edge(self.scene, node2.outputs[0], node.inputs[0], type=EDGE_TYPE_BEZIER)
-        edge2 = Edge(self.scene, node2.outputs[2], node.inputs[1], type=EDGE_TYPE_BEZIER)
+        edge1 = Edge(self.scene, node2.outputs[0], node.inputs[0], edgeType=EDGE_TYPE_BEZIER)
+        edge2 = Edge(self.scene, node2.outputs[2], node.inputs[1], edgeType=EDGE_TYPE_BEZIER)
+        edge3 = Edge(self.scene, node.outputs[0], node3.inputs[1], edgeType=EDGE_TYPE_BEZIER)

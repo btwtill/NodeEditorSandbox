@@ -43,6 +43,9 @@ class QDMGraphicsNode(QGraphicsItem):
         self._title = value
         self.titleItem.setPlainText(self._title)
 
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        self.node.updateConnectedEdges()
 
     def initUI(self):
         self.setFlag(QGraphicsItem.ItemIsSelectable)

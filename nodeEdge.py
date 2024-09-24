@@ -3,17 +3,20 @@ from nodeGraphicsEdge import *
 EDGE_TYPE_DIRECT = 1
 EDGE_TYPE_BEZIER = 2
 
-DEBUG = True
+DEBUG = False
 
 class Edge():
-    def __init__(self, scene, startSocket, endSocket, type = EDGE_TYPE_DIRECT):
+    def __init__(self, scene, startSocket, endSocket, edgeType = EDGE_TYPE_DIRECT):
 
         self.scene = scene
 
         self.startSocket = startSocket
         self.endSocket = endSocket
 
-        self.grEdge = QDMGraphicsEdgeDirect(self) if type == EDGE_TYPE_DIRECT else QDMGraphicsEdgeBezier(self)
+        self.startSocket.setConnectedEdge(self)
+        self.endSocket.setConnectedEdge(self)
+
+        self.grEdge = QDMGraphicsEdgeDirect(self) if edgeType == EDGE_TYPE_DIRECT else QDMGraphicsEdgeBezier(self)
 
         self.updatePositions()
 

@@ -8,15 +8,17 @@ RIGHT_BOTTOM = 4
 DEBUG = False
 
 class Socket():
-    def __init__(self, node, index=0, position=LEFT_TOP):
+    def __init__(self, node, index=0, position=LEFT_TOP, socketType = 0):
 
         self.node = node
         self.index = index
         self.position = position
+        self.socketType = socketType
 
-        print("Socket -- creating with" ,self.index, self.position, "for node", self.node)
+        if DEBUG : print("Socket -- creating with" ,self.index, self.position, "for node", self.node)
 
-        self.grSocket = QDMGraphicsSocket(self.node.grNode)
+
+        self.grSocket = QDMGraphicsSocket(self.node.grNode, self.socketType)
 
         self.grSocket.setPos(*self.node.getSocketPosition(index, position))
 
@@ -32,3 +34,6 @@ class Socket():
 
     def setConnectedEdge(self, edge = None):
         self.edge = edge
+
+    def hasEdge(self):
+        return self.edge is not None
