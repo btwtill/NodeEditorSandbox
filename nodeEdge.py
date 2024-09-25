@@ -57,10 +57,19 @@ class Edge():
         self.startSocket = None
 
     def remove(self):
+        if DEBUG: print("Edge : DEBUG : removing edge", self)
+        if DEBUG: print("Edge : DEBUG : removing edge from Sockets", self)
         self.removeFromSockets()
+        if DEBUG: print("Edge : DEBUG : removing graphical Edge from Scene", self)
         self.scene.grScene.removeItem(self.grEdge)
         self.grEdge = None
-        self.scene.removeEdge(self)
+        if DEBUG: print("Edge : DEBUG : removing edge from Scene", self)
+
+        try:
+            self.scene.removeEdge(self)
+        except ValueError:
+            pass
+        if DEBUG: print("Edge : DEBUG : DONE!!", self)
 
     def __str__(self):
         return "<Edge %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])

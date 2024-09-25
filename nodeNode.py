@@ -2,13 +2,14 @@ from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import Socket, LEFT_TOP, RIGHT_TOP, LEFT_BOTTOM, RIGHT_BOTTOM
 
+DEBUG = False
 
 class Node():
     def __init__(self, scene, title = "undifined Node", inputs = [], outputs = []):
         self.scene = scene
         self.title = title
 
-        self.content = QDMNodeContentWidget()
+        self.content = QDMNodeContentWidget(self)
         self.grNode = QDMGraphicsNode(self)
 
         self.scene.addNode(self)
@@ -53,6 +54,22 @@ class Node():
         for socket in self.inputs + self.outputs:
             if socket.hasEdge():
                 socket.edge.updatePositions()
+
+    def remove(self):
+        if DEBUG : print("Node : DEBUG : removing node", self)
+        if DEBUG : print("Node : DEBUG : removing all edges form sockets")
+
+        for socket in (self.inputs + self.outputs):
+            if socket.hasEdge():
+                if DEBUG : print("Node : DEBUG : removing edge ", socket.edge, "From Socket", socket)
+                socket.edge.remove()
+        if DEBUG:  print("Node : DEBUG : removing gr Node")
+        self.scene.grScene.removeItem(self.grNode)
+        self.grNode = None
+        if DEBUG:  print("Node : DEBUG : removing node from scene list")
+        self.scene.removeNode(self)
+        if DEBUG:  print("Node : DEBUG : DONE!!")
+
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])

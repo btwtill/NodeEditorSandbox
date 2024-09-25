@@ -21,6 +21,7 @@ class QDMGraphicsView(QGraphicsView):
         self.initUI()
 
         self.mode = MODE_NOOP
+        self.editingFlag = False
 
         self.setScene(self.graphicsScene)
 
@@ -178,6 +179,25 @@ class QDMGraphicsView(QGraphicsView):
         if not clamped or self.zoomClamp is False:
             self.scale(zoomFactor, zoomFactor)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            if not self.editingFlag:
+                self.deleteSelected()
+            else:
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
+
+    def deleteSelected(self):
+
+        for item in self.graphicsScene.selectedItems():
+            if isinstance(item, QDMGraphicsEdge):
+                item.edge.remove()
+            elif hasattr(item, "node"):
+                item.node.remove()
+
+
+
     def getItemAtClick(self, event):
         pos = event.pos()
         obj = self.itemAt(pos)
@@ -199,25 +219,25 @@ class QDMGraphicsView(QGraphicsView):
         self.mode = MODE_NOOP
 
         if type(item) == QDMGraphicsSocket:
-            if DEBUG : print("View : edgeDragEnd : previouse Edge" , self.previousEdge)
-            if item.socket.hasEdge():
-                item.socket.edge.remove()
+            if item.socket != self.lastStartSocket:
+                if DEBUG : print("View : edgeDragEnd : previouse Edge" , self.previousEdge)
+                if item.socket.hasEdge():
+                    item.socket.edge.remove()
 
-            if DEBUG : print("View : edgeDragEnd : assign End Socket", item.socket)
+                if DEBUG : print("View : edgeDragEnd : assign End Socket", item.socket)
 
-            if self.previousEdge is not None: self.previousEdge.remove()
-            if DEBUG: print("View : EdgeDragEnd -- previous Edge Removed")
+                if self.previousEdge is not None: self.previousEdge.remove()
+                if DEBUG: print("View : EdgeDragEnd -- previous Edge Removed")
 
-            self.dragEdge.startSocket = self.lastStartSocket
-            self.dragEdge.endSocket = item.socket
-            self.dragEdge.startSocket.setConnectedEdge(self.dragEdge)
-            self.dragEdge.endSocket.setConnectedEdge(self.dragEdge)
+                self.dragEdge.startSocket = self.lastStartSocket
+                self.dragEdge.endSocket = item.socket
+                self.dragEdge.startSocket.setConnectedEdge(self.dragEdge)
+                self.dragEdge.endSocket.setConnectedEdge(self.dragEdge)
 
-            if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
+                if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
 
-            self.dragEdge.updatePositions()
-
-            return True
+                self.dragEdge.updatePositions()
+                return True
 
         if DEBUG : print( "View : edgeDragEnd -- about to set socket to previous edge", self.previousEdge)
 
