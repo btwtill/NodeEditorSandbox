@@ -92,7 +92,13 @@ class QDMGraphicsNode(QGraphicsItem):
 
         pathContent = QPainterPath()
         pathContent.setFillRule(Qt.FillRule.WindingFill)
-        pathContent.addRoundedRect(0, self.titleHeight, self.width, self.height - self.titleHeight, self.edgeSize, self.edgeSize)
+        pathContent.addRoundedRect(0,
+                                   self.titleHeight,
+                                   self.width,
+                                   self.height - self.titleHeight,
+                                   self.edgeSize,
+                                   self.edgeSize)
+
         pathContent.addRect(0, self.titleHeight, self.edgeSize, self.edgeSize)
         pathContent.addRect(self.width - self.edgeSize, self.titleHeight, self.edgeSize, self.edgeSize)
         painter.setPen(Qt.PenStyle.NoPen)

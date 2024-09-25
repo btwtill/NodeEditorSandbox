@@ -77,12 +77,14 @@ class QDMGraphicsView(QGraphicsView):
 
         super().mouseReleaseEvent(releaseEvent)
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-        fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton, event.buttons() | Qt.MouseButton.LeftButton, event.modifiers())
+        fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
+                                event.buttons() | Qt.MouseButton.LeftButton, event.modifiers())
         super().mousePressEvent(fakeEvent)
 
 
     def middleMouseButtonRelease(self, event):
-        fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton, event.buttons() | -Qt.MouseButton.LeftButton, event.modifiers())
+        fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
+                                event.buttons() | -Qt.MouseButton.LeftButton, event.modifiers())
         super().mouseReleaseEvent(fakeEvent)
         self.setDragMode(QGraphicsView.NoDrag)
         self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -98,7 +100,8 @@ class QDMGraphicsView(QGraphicsView):
             if event.modifiers() & Qt.Modifier.SHIFT:
 
                 event.ignore()
-                fakeEvent = QMouseEvent(QEvent.Type.MouseButtonPress, event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton, event.buttons() | Qt.MouseButton.LeftButton,
+                fakeEvent = QMouseEvent(QEvent.Type.MouseButtonPress, event.localPos(), event.screenPos(),
+                                        Qt.MouseButton.LeftButton, event.buttons() | Qt.MouseButton.LeftButton,
                                         event.modifiers() | Qt.Modifier.CTRL)
 
                 super().mousePressEvent(fakeEvent)
@@ -132,7 +135,8 @@ class QDMGraphicsView(QGraphicsView):
         if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
             if event.modifiers() & Qt.Modifier.SHIFT:
                 event.ignore()
-                fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
+                fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
+                                        Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
                                         event.modifiers() | Qt.Modifier.CTRL)
                 super().mouseReleaseEvent(fakeEvent)
                 return
@@ -156,7 +160,8 @@ class QDMGraphicsView(QGraphicsView):
 
         item = self.getItemAtClick(event)
         if DEBUG:
-            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting" , item.edge.startSocket, " <----> ", item.edge.endSocket)
+            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting" ,
+                                                        item.edge.startSocket, " <----> ", item.edge.endSocket)
             if type(item) == QDMGraphicsSocket: print("RMB : DEBUG : " , item.socket, "has Edge" , item.socket.edge)
 
             if item == None:
@@ -284,7 +289,8 @@ class QDMGraphicsView(QGraphicsView):
         newMouseButtonReleaseScenePosition = self.mapToScene(event.pos())
         mouseSceneDistance = newMouseButtonReleaseScenePosition - self.lastMouseButtonClickedPosition
         edgeDragThresholdSquared = EDGE_START_DRAG_THRESHOLD * EDGE_START_DRAG_THRESHOLD
-        return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() * mouseSceneDistance.y() > edgeDragThresholdSquared)
+        return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() *
+                mouseSceneDistance.y() > edgeDragThresholdSquared)
 
     def cutIntersectingEdges(self):
 

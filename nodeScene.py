@@ -1,6 +1,5 @@
 from nodeGraphicsScene import QDMGraphicsScene
 
-
 class Scene():
     def __init__(self):
 
