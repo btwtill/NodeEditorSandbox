@@ -13,8 +13,11 @@ class Edge():
         self.startSocket = startSocket
         self.endSocket = endSocket
 
-        self.startSocket.setConnectedEdge(self)
-        self.endSocket.setConnectedEdge(self)
+        if self.startSocket != None:
+            self.startSocket.setConnectedEdge(self)
+
+        if self.endSocket != None:
+            self.endSocket.setConnectedEdge(self)
 
         self.grEdge = QDMGraphicsEdgeDirect(self) if edgeType == EDGE_TYPE_DIRECT else QDMGraphicsEdgeBezier(self)
 
@@ -39,9 +42,8 @@ class Edge():
             endPos[1] += self.endSocket.node.grNode.pos().y()
 
             self.grEdge.setDestination(*endPos)
-
-        if DEBUG : print(" SS:", self.startSocket)
-        if DEBUG : print(" ES:", self.endSocket)
+        else:
+            self.grEdge.setDestination(*sourcePos)
 
         self.grEdge.update()
 

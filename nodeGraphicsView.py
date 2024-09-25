@@ -2,6 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QGraphicsView
 
+from nodeEdge import EDGE_TYPE_BEZIER, Edge
 from nodeGraphicsEdge import QDMGraphicsEdge
 from nodeGraphicsSocket import QDMGraphicsSocket
 
@@ -129,6 +130,15 @@ class QDMGraphicsView(QGraphicsView):
     def rightMouseButtonReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
+    def mouseMoveEvent(self, event):
+
+        if self.mode == MODE_EDGEDRAG:
+            pos = self.mapToScene(event.pos())
+            self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
+            self.dragEdge.grEdge.update()
+
+        super().mouseMoveEvent(event)
+
     def wheelEvent(self, event):
         zoomOutFactor = 1 / self.zoomInFactor
 
@@ -151,14 +161,53 @@ class QDMGraphicsView(QGraphicsView):
         obj = self.itemAt(pos)
         return obj
 
+    def edgeDragStart(self, item):
+
+        if DEBUG: print("View : edgeDragStart : Start Dragging Edge")
+        if DEBUG: print("View : edgeDragStart :  assign Start Socket ")
+        self.previousEdge = item.socket.edge
+        self.lastStartSocket = item.socket
+
+        self.dragEdge = Edge(self.graphicsScene.scene, item.socket, None, EDGE_TYPE_BEZIER)
+
+        if DEBUG : print("View : edgeDragStart : dragEdge", self.dragEdge)
+
     def edgeDragEnd(self, item):
 
         self.mode = MODE_NOOP
 
-        if DEBUG : print("View : edgeDragEnd : end Dragging Edge")
         if type(item) == QDMGraphicsSocket:
-            if DEBUG : print("View : edgeDragEnd : assign End Socket")
+            if DEBUG : print("View : edgeDragEnd : previouse Edge" , self.previousEdge)
+            if item.socket.hasEdge():
+                item.socket.edge.remove()
+
+            if DEBUG : print("View : edgeDragEnd : assign End Socket", item.socket)
+
+            if self.previousEdge is not None: self.previousEdge.remove()
+            if DEBUG: print("View : EdgeDragEnd -- previous Edge Removed")
+
+            self.dragEdge.startSocket = self.lastStartSocket
+            self.dragEdge.endSocket = item.socket
+            self.dragEdge.startSocket.setConnectedEdge(self.dragEdge)
+            self.dragEdge.endSocket.setConnectedEdge(self.dragEdge)
+
+            if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
+
+            self.dragEdge.updatePositions()
+
             return True
+
+        if DEBUG : print( "View : edgeDragEnd -- about to set socket to previous edge", self.previousEdge)
+
+        if DEBUG: print("View : edgeDragEnd : end Dragging Edge")
+        self.dragEdge.remove()
+        self.dragEdge = None
+
+        if self.previousEdge is not None:
+            self.previousEdge.startSocket.edge = self.previousEdge
+            if DEBUG : print("Viewv : edgeDragEnd -- previous Start socket " , self.previousEdge.startSocket.edge)
+
+        if DEBUG : print("View : edgeDragEnd - everithing done.")
 
         return False
 
@@ -169,6 +218,3 @@ class QDMGraphicsView(QGraphicsView):
         edgeDragThresholdSquared = EDGE_START_DRAG_THRESHOLD * EDGE_START_DRAG_THRESHOLD
         return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() * mouseSceneDistance.y() > edgeDragThresholdSquared)
 
-    def edgeDragStart(self, item):
-        if DEBUG : print("View : edgeDragStart : Start Dragging Edge")
-        if DEBUG : print("View : edgeDragStart :  assign Start Socket ")
