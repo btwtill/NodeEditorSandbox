@@ -2,6 +2,15 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QGraphicsView
 
+from nodeGraphicsEdge import QDMGraphicsEdge
+from nodeGraphicsSocket import QDMGraphicsSocket
+
+MODE_NOOP = 1
+MODE_EDGEDRAG = 2
+
+EDGE_START_DRAG_THRESHOLD = 10
+
+DEBUG = True
 
 class QDMGraphicsView(QGraphicsView):
     def __init__(self, graphicsScene, parent = None):
@@ -9,6 +18,8 @@ class QDMGraphicsView(QGraphicsView):
         self.graphicsScene = graphicsScene
 
         self.initUI()
+
+        self.mode = MODE_NOOP
 
         self.setScene(self.graphicsScene)
 
@@ -68,16 +79,55 @@ class QDMGraphicsView(QGraphicsView):
         self.setDragMode(QGraphicsView.NoDrag)
 
     def leftMouseButtonPressEvent(self, event):
-        return super().mousePressEvent(event)
+
+        item  = self.getItemAtClick(event)
+        self.lastMouseButtonClickedPosition = self.mapToScene(event.pos())
+
+        if type(item) == QDMGraphicsSocket:
+            if self.mode == MODE_NOOP:
+                self.mode = MODE_EDGEDRAG
+                self.edgeDragStart(item)
+                return
+
+        if self.mode == MODE_EDGEDRAG:
+            res = self.edgeDragEnd(item)
+            if res: return
+
+        super().mousePressEvent(event)
 
     def leftMouseButtonReleaseEvent(self, event):
-        return super().mouseReleaseEvent(event)
+
+        item = self.getItemAtClick(event)
+
+        if self.mode == MODE_EDGEDRAG:
+            if self.distanceBetweenClickAndReleaseIsOff(event):
+                res = self.edgeDragEnd(item)
+                if res: return
+
+        super().mouseReleaseEvent(event)
 
     def rightMouseButtonPressEvent(self, event):
-        return super().mousePressEvent(event)
+
+        item = self.getItemAtClick(event)
+        if DEBUG:
+            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting" , item.edge.startSocket, " <----> ", item.edge.endSocket)
+            if type(item) == QDMGraphicsSocket: print("RMB : DEBUG : " , item.socket, "has Edge" , item.socket.edge)
+
+            if item == None:
+                print("View : DEBUG : Scene: ")
+                print("     Nodes: ")
+                for item in self.graphicsScene.scene.nodes:
+                    print("         ", item)
+                print("     Edges: ")
+                for item in self.graphicsScene.scene.edges:
+                    print("         ", item)
+            elif type(item) == QDMGraphicsEdge:
+                print("View : DEBUG : Edge : ")
+
+        super().mousePressEvent(event)
 
     def rightMouseButtonReleaseEvent(self, event):
-        return super().mouseReleaseEvent(event)
+        super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         zoomOutFactor = 1 / self.zoomInFactor
@@ -95,3 +145,30 @@ class QDMGraphicsView(QGraphicsView):
 
         if not clamped or self.zoomClamp is False:
             self.scale(zoomFactor, zoomFactor)
+
+    def getItemAtClick(self, event):
+        pos = event.pos()
+        obj = self.itemAt(pos)
+        return obj
+
+    def edgeDragEnd(self, item):
+
+        self.mode = MODE_NOOP
+
+        if DEBUG : print("View : edgeDragEnd : end Dragging Edge")
+        if type(item) == QDMGraphicsSocket:
+            if DEBUG : print("View : edgeDragEnd : assign End Socket")
+            return True
+
+        return False
+
+    def distanceBetweenClickAndReleaseIsOff(self, event):
+
+        newMouseButtonReleaseScenePosition = self.mapToScene(event.pos())
+        mouseSceneDistance = newMouseButtonReleaseScenePosition - self.lastMouseButtonClickedPosition
+        edgeDragThresholdSquared = EDGE_START_DRAG_THRESHOLD * EDGE_START_DRAG_THRESHOLD
+        return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() * mouseSceneDistance.y() > edgeDragThresholdSquared)
+
+    def edgeDragStart(self, item):
+        if DEBUG : print("View : edgeDragStart : Start Dragging Edge")
+        if DEBUG : print("View : edgeDragStart :  assign Start Socket ")

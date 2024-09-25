@@ -4,8 +4,10 @@ from PyQt5.QtWidgets import QGraphicsItem
 
 
 class QDMGraphicsSocket(QGraphicsItem):
-    def __init__(self, parent = None, socketType = 0):
-        super().__init__(parent)
+    def __init__(self, socket, socketType = 0):
+        self.socket = socket
+        super().__init__(socket.node.grNode)
+
 
         self.radius = 6
         self.outlineWidth = 1

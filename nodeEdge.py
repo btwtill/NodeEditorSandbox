@@ -23,6 +23,7 @@ class Edge():
         if DEBUG : print("Edge: ", self.grEdge.posSource, "to", self.grEdge.posDestination)
 
         self.scene.grScene.addItem(self.grEdge)
+        self.scene.addEdge(self)
 
     def updatePositions(self):
 
@@ -58,3 +59,6 @@ class Edge():
         self.scene.grScene.removeItem(self.grEdge)
         self.grEdge = None
         self.scene.removeEdge(self)
+
+    def __str__(self):
+        return "<Edge %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
