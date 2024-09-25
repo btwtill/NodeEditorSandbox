@@ -2,3 +2,4 @@ QDMNodeContentWidget { background : transparent; }
 
 QDMNodeContentWidget QLabel { color  : #ffffffff; }
 
+QGraphicsView { selection-background-color: rgb(255, 255, 255);}

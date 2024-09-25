@@ -43,6 +43,7 @@ class QDMGraphicsView(QGraphicsView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:
@@ -78,11 +79,24 @@ class QDMGraphicsView(QGraphicsView):
         fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton, event.buttons() | -Qt.MouseButton.LeftButton, event.modifiers())
         super().mouseReleaseEvent(fakeEvent)
         self.setDragMode(QGraphicsView.NoDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def leftMouseButtonPressEvent(self, event):
 
         item  = self.getItemAtClick(event)
         self.lastMouseButtonClickedPosition = self.mapToScene(event.pos())
+
+        if DEBUG : print("LMB Click on", item, self.debugModifiers(event))
+
+        if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
+            if event.modifiers() & Qt.Modifier.SHIFT:
+
+                event.ignore()
+                fakeEvent = QMouseEvent(QEvent.MouseButtonPress, event.localPos(), event.screenPos(), Qt.LeftButton, event.buttons() | Qt.LeftButton,
+                                        event.modifiers() | Qt.ControlModifier)
+
+                super().mousePressEvent(fakeEvent)
+                return
 
         if type(item) == QDMGraphicsSocket:
             if self.mode == MODE_NOOP:
@@ -99,6 +113,14 @@ class QDMGraphicsView(QGraphicsView):
     def leftMouseButtonReleaseEvent(self, event):
 
         item = self.getItemAtClick(event)
+
+        if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
+            if event.modifiers() & Qt.Modifier.SHIFT:
+                event.ignore()
+                fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.LeftButton, Qt.MouseButton.NoButton,
+                                        event.modifiers() | Qt.ControlModifier)
+                super().mouseReleaseEvent(fakeEvent)
+                return
 
         if self.mode == MODE_EDGEDRAG:
             if self.distanceBetweenClickAndReleaseIsOff(event):
@@ -217,4 +239,12 @@ class QDMGraphicsView(QGraphicsView):
         mouseSceneDistance = newMouseButtonReleaseScenePosition - self.lastMouseButtonClickedPosition
         edgeDragThresholdSquared = EDGE_START_DRAG_THRESHOLD * EDGE_START_DRAG_THRESHOLD
         return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() * mouseSceneDistance.y() > edgeDragThresholdSquared)
+
+    def debugModifiers(self, event):
+        out = "MODS: "
+        if event.modifiers() & Qt.Modifier.SHIFT: out += " SHIFT"
+        if event.modifiers() & Qt.Modifier.CTRL: out += " CTRL"
+        if event.modifiers() & Qt.Modifier.ALT: out += " ALT"
+
+        return out
 
