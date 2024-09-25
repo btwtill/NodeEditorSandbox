@@ -28,7 +28,7 @@ class QDMGraphicsNode(QGraphicsItem):
 
 
         self.initTitle()
-        self.title = self.node.title
+        self.title = self.node._title
 
         self.initSockets()
 

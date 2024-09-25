@@ -1,16 +1,26 @@
+from collections import OrderedDict
+from socket import socket
+
+from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import Socket, LEFT_TOP, RIGHT_TOP, LEFT_BOTTOM, RIGHT_BOTTOM
 
 DEBUG = False
 
-class Node():
+class Node(Serializable):
     def __init__(self, scene, title = "undifined Node", inputs = [], outputs = []):
+        super().__init__()
+
+        self._title = title
+
         self.scene = scene
-        self.title = title
+
 
         self.content = QDMNodeContentWidget(self)
         self.grNode = QDMGraphicsNode(self)
+
+        self.title = title
 
         self.scene.addNode(self)
         self.scene.grScene.addItem(self.grNode)
@@ -35,6 +45,15 @@ class Node():
     @property
     def pos(self):
         return self.grNode.pos()
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+        self.grNode.title = self._title
 
     def getSocketPosition(self, index, position):
 
@@ -73,3 +92,53 @@ class Node():
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+
+    def serialize(self):
+        inputs, outputs = [], []
+
+        for socket in self.inputs: inputs.append(socket.serialize())
+        for socket in self.outputs: outputs.append(socket.serialize())
+
+        return OrderedDict([
+            ("id" , self.id),
+            ("title", self._title),
+            ("pos_x", self.grNode.scenePos().x()),
+            ("pos_y", self.grNode.scenePos().y()),
+            ("inputs", inputs),
+            ("outputs", outputs),
+            ("content", self.content.serialize()),
+            ]
+        )
+
+    def deserialize(self, data, hashmap = {}):
+        print("Deserializing data", data)
+        self.id = data['id']
+        hashmap[data['id']] = self
+        self.title = data['title']
+
+        self.setPosition(data['pos_x'], data['pos_y'])
+
+        data['inputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000 )
+        data['outputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000)
+
+        self.inputs = []
+        self.outputs = []
+
+        for socketData in data['inputs']:
+            newSocket = Socket(node = self, index = socketData['index'],
+                               position = socketData['position'],
+                               socketType = socketData['socketType'])
+
+            newSocket.deserialize(socketData, hashmap)
+            self.inputs.append(newSocket)
+
+        for socketData in data['outputs']:
+            newSocket = Socket(node = self, index = socketData['index'],
+                               position = socketData['position'],
+                               socketType = socketData['socketType'])
+            newSocket.deserialize(socketData, hashmap)
+            self.outputs.append(newSocket)
+
+        print(hashmap)
+
+        return True

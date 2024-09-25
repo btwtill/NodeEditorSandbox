@@ -218,6 +218,13 @@ class QDMGraphicsView(QGraphicsView):
                 self.deleteSelected()
             else:
                 super().keyPressEvent(event)
+
+        elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
+            self.graphicsScene.scene.saveToFile("graph.json.txt")
+
+        elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
+            self.graphicsScene.scene.loadFromFile("graph.json.txt")
+
         else:
             super().keyPressEvent(event)
 
@@ -262,8 +269,8 @@ class QDMGraphicsView(QGraphicsView):
 
                 self.dragEdge.startSocket = self.lastStartSocket
                 self.dragEdge.endSocket = item.socket
-                self.dragEdge.startSocket.setConnectedEdge(self.dragEdge)
-                self.dragEdge.endSocket.setConnectedEdge(self.dragEdge)
+                self.dragEdge.startSocket.edge(self.dragEdge)
+                self.dragEdge.endSocket.edge(self.dragEdge)
 
                 if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
 
