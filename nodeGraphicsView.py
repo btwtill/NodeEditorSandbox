@@ -268,22 +268,20 @@ class QDMGraphicsView(QGraphicsView):
         elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
             self.graphicsScene.scene.loadFromFile("graph.json.txt")
 
-        elif event.key() == Qt.Key.Key_1:
-            self.graphicsScene.scene.sceneHistory.storeHistory("Item A")
-        elif event.key() == Qt.Key.Key_2:
-            self.graphicsScene.scene.sceneHistory.storeHistory("Item B")
-        elif event.key() == Qt.Key.Key_3:
-            self.graphicsScene.scene.sceneHistory.storeHistory("Item C")
-        elif event.key() == Qt.Key.Key_4:
+        elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
             self.graphicsScene.scene.sceneHistory.undo()
-        elif event.key() == Qt.Key.Key_5:
+
+        elif self.isZAndCtrlAndAltPressed(event):
             self.graphicsScene.scene.sceneHistory.redo()
+
         elif event.key() == Qt.Key.Key_H:
+
             print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
                    " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
-            print ("View : DEBUG : History: ", self.graphicsScene.scene.sceneHistory.historyStack)
-
-
+            ix = 0
+            for item in self.graphicsScene.scene.sceneHistory.historyStack:
+                print ("View : DEBUG : History: #", ix, "--", item['desc'], self.graphicsScene.scene.sceneHistory.historyStack)
+                ix += 1
 
         else:
             super().keyPressEvent(event)
@@ -295,6 +293,8 @@ class QDMGraphicsView(QGraphicsView):
                 item.edge.remove()
             elif hasattr(item, "node"):
                 item.node.remove()
+
+        self.graphicsScene.scene.sceneHistory.storeHistory("Delete Selected")
 
     def getItemAtClick(self, event):
         pos = event.pos()
@@ -311,6 +311,7 @@ class QDMGraphicsView(QGraphicsView):
         self.dragEdge = Edge(self.graphicsScene.scene, item.socket, None, EDGE_TYPE_BEZIER)
 
         if DEBUG : print("View : edgeDragStart : dragEdge", self.dragEdge)
+
 
     def edgeDragEnd(self, item):
 
@@ -337,6 +338,8 @@ class QDMGraphicsView(QGraphicsView):
                 if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
 
                 self.dragEdge.updatePositions()
+                self.graphicsScene.scene.sceneHistory.storeHistory("Create New Edge through dragging")
+
                 return True
 
         if DEBUG : print( "View : edgeDragEnd -- about to set socket to previous edge", self.previousEdge)
@@ -365,6 +368,34 @@ class QDMGraphicsView(QGraphicsView):
         return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() *
                 mouseSceneDistance.y() > edgeDragThresholdSquared)
 
+    def isZKeyOnlyPressed(self, event):
+
+        isZkeyPressed = event.key() == Qt.Key.Key_Z
+        isCtrlModifierActive = event.modifiers() & Qt.Modifier.CTRL
+        isAltModifierActive = event.modifiers() & Qt.Modifier.ALT
+        isShiftModifierActive = event.modifiers() & Qt.Modifier.SHIFT
+
+        return isZkeyPressed and not isAltModifierActive and not isCtrlModifierActive and not isShiftModifierActive
+
+    def isZAndCtrlKeyPressed(self, event):
+
+        isZKeyPressed = event.key() == Qt.Key.Key_Z
+        isCtrlModifierActive = event.modifiers() & Qt.Modifier.CTRL
+        isAltModifierActive = event.modifiers() & Qt.Modifier.ALT
+        isShiftModifierActive = event.modifiers() & Qt.Modifier.SHIFT
+
+
+        return  isZKeyPressed and isCtrlModifierActive and not isAltModifierActive and not isShiftModifierActive
+
+    def isZAndCtrlAndAltPressed(self, event):
+
+        isZKeyPressed = event.key() == Qt.Key.Key_Z
+        isCtrlModifierActive = event.modifiers() & Qt.Modifier.CTRL
+        isAltModifierActive = event.modifiers() & Qt.Modifier.ALT
+        isShiftModifierActive = event.modifiers() & Qt.Modifier.SHIFT
+
+        return isZKeyPressed and isCtrlModifierActive and isAltModifierActive and not isShiftModifierActive
+
     def cutIntersectingEdges(self):
 
         for ix in range(len(self.cutline.linePoints) - 1):
@@ -374,6 +405,8 @@ class QDMGraphicsView(QGraphicsView):
             for edge in self.graphicsScene.scene.edges:
                 if edge.grEdge.intersectsWith(p1, p2):
                     edge.remove()
+
+        self.graphicsScene.scene.sceneHistory.storeHistory("Cut Edge")
 
     def debugModifiers(self, event):
         out = "MODS: "
