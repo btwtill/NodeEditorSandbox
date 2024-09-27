@@ -197,6 +197,9 @@ class QDMGraphicsView(QGraphicsView):
             self.mode = MODE_NOOP
             return
 
+        if self.dragMode() == QGraphicsView.RubberBandDrag:
+            self.graphicsScene.scene.sceneHistory.storeHistory("Selection Changed")
+
         super().mouseReleaseEvent(event)
 
     def rightMouseButtonPressEvent(self, event):

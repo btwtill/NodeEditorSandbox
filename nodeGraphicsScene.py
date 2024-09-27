@@ -1,7 +1,8 @@
 from PyQt5.QtCore import QLine
 import math
 from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsScene
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView
+
 
 class QDMGraphicsScene(QGraphicsScene):
     def __init__(self, scene, parent = None):

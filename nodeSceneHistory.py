@@ -6,10 +6,9 @@ class SceneHistory():
     def __init__(self, scene):
         self.scene = scene
 
-
         self.historyStack = []
         self.historyCurrentStep = -1
-        self.historyLimit = 8
+        self.historyLimit = 32
 
     def undo(self):
         if DEBUG : print("HISTORY : DEBUG : UNDO")
