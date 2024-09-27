@@ -7,17 +7,20 @@ from nodeGraphicsCutLine import QDMCutLine
 from nodeGraphicsEdge import QDMGraphicsEdge
 from nodeGraphicsSocket import QDMGraphicsSocket
 
+#Constants
 MODE_NOOP = 1
 MODE_EDGEDRAG = 2
 MODE_EDGE_CUT = 3
 
 EDGE_START_DRAG_THRESHOLD = 10
 
+#Debugging Mode
 DEBUG = True
 
 class QDMGraphicsView(QGraphicsView):
     def __init__(self, graphicsScene, parent = None):
         super().__init__(parent)
+
         self.graphicsScene = graphicsScene
 
         self.initUI()
@@ -33,25 +36,32 @@ class QDMGraphicsView(QGraphicsView):
         self.zoomStep = 1
         self.zoomRange = [0, 10]
 
+        #Empy Object that will be drawn on ctrl left Mouse button
         self.cutline = QDMCutLine()
         self.graphicsScene.addItem(self.cutline)
 
 
 
     def initUI(self):
+        #Set rendering Attributes
         self.setRenderHints(QPainter.Antialiasing |
                             QPainter.HighQualityAntialiasing |
                             QPainter.TextAntialiasing |
                             QPainter.SmoothPixmapTransform)
 
         self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
+
+        #Set Scrollbar Config
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+        #set Default Drag Behaviour
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def mousePressEvent(self, event):
+
+        #trigger different mouse Events based on input event
         if event.button() == Qt.MouseButton.MiddleButton:
             self.middleMouseButtonPress(event)
         elif event.button() == Qt.MouseButton.LeftButton:
@@ -62,6 +72,8 @@ class QDMGraphicsView(QGraphicsView):
             super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
+
+        #Trigger different Release Events based on input Release Event
         if event.button() == Qt.MouseButton.MiddleButton:
             self.middleMouseButtonRelease(event)
         elif event.button() == Qt.MouseButton.LeftButton:
@@ -72,34 +84,48 @@ class QDMGraphicsView(QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def middleMouseButtonPress(self, event):
+
+        #fake event, Release Middle Mouse button or any mouse button
         releaseEvent = QMouseEvent(QEvent.Type.MouseButtonRelease, event.localPos(), event.screenPos(),
                                    Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, event.modifiers())
-
         super().mouseReleaseEvent(releaseEvent)
         self.setDragMode(QGraphicsView.ScrollHandDrag)
+
+        #imiting that it would be a left mouse button klick event
         fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
                                 event.buttons() | Qt.MouseButton.LeftButton, event.modifiers())
+
         super().mousePressEvent(fakeEvent)
 
 
     def middleMouseButtonRelease(self, event):
+
+        #Fake Left Mouse release
         fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
                                 event.buttons() | -Qt.MouseButton.LeftButton, event.modifiers())
         super().mouseReleaseEvent(fakeEvent)
+
+        #resetting the drag behaviour to enable drag selection
         self.setDragMode(QGraphicsView.NoDrag)
         self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def leftMouseButtonPressEvent(self, event):
 
+        #retrieve and store the active object that was clicked on
         item  = self.getItemAtClick(event)
+
+        #store the position it was clicked on
         self.lastMouseButtonClickedPosition = self.mapToScene(event.pos())
 
         if DEBUG : print("LMB Click on", item, self.debugModifiers(event))
 
+        #if the recrieved object is eigther type node, edge or none
         if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
             if event.modifiers() & Qt.Modifier.SHIFT:
 
                 event.ignore()
+
+                #when shift is beeing hold down simulate a ctrl key event and left mouse button klick
                 fakeEvent = QMouseEvent(QEvent.Type.MouseButtonPress, event.localPos(), event.screenPos(),
                                         Qt.MouseButton.LeftButton, event.buttons() | Qt.MouseButton.LeftButton,
                                         event.modifiers() | Qt.Modifier.CTRL)
@@ -107,22 +133,31 @@ class QDMGraphicsView(QGraphicsView):
                 super().mousePressEvent(fakeEvent)
                 return
 
+        #when the type is of socket start dragging an edge
         if type(item) == QDMGraphicsSocket:
+
+            #only if not already in drag mode or cut mode
             if self.mode == MODE_NOOP:
                 self.mode = MODE_EDGEDRAG
                 self.edgeDragStart(item)
                 return
-
+        #if pressed and the dragging edge is currently beeing dragged end the edge dragging
         if self.mode == MODE_EDGEDRAG:
             res = self.edgeDragEnd(item)
             if res: return
 
+        # if the press is to the voide check for ctrl key  (edge cutting )
         if item == None:
             if event.modifiers() & Qt.Modifier.CTRL:
                 self.mode = MODE_EDGE_CUT
+
+                #fake release event
                 fakeEvent = QMouseEvent(QEvent.Type.MouseButtonRelease, event.localPos(), event.screenPos(),
                                         Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, event.modifiers())
+
                 super().mouseReleaseEvent(fakeEvent)
+
+                #indicate the edge cut mode with a different cursor
                 QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
                 return
 
@@ -130,18 +165,26 @@ class QDMGraphicsView(QGraphicsView):
 
     def leftMouseButtonReleaseEvent(self, event):
 
+        # retrieve and store the item that was clicked on in the canvas
         item = self.getItemAtClick(event)
 
+        #check if the clicked item was of type node, edge or none
         if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
+
+            #activate the ctrl key behavior if the shift key is pressed
             if event.modifiers() & Qt.Modifier.SHIFT:
+
                 event.ignore()
                 fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
                                         Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
                                         event.modifiers() | Qt.Modifier.CTRL)
                 super().mouseReleaseEvent(fakeEvent)
-                return
 
+                return
+        # if there is an edge beeing dragged
         if self.mode == MODE_EDGEDRAG:
+
+            #and the distance between the click and release checks out end the dragging
             if self.distanceBetweenClickAndReleaseIsOff(event):
                 res = self.edgeDragEnd(item)
                 if res: return
@@ -269,8 +312,10 @@ class QDMGraphicsView(QGraphicsView):
 
                 self.dragEdge.startSocket = self.lastStartSocket
                 self.dragEdge.endSocket = item.socket
-                self.dragEdge.startSocket.edge(self.dragEdge)
-                self.dragEdge.endSocket.edge(self.dragEdge)
+                self.dragEdge.startSocket.edge = self.dragEdge
+                self.dragEdge.endSocket.edge = self.dragEdge
+
+                if DEBUG : print("View : DEBUG : start Socket Edge ", self.dragEdge.startSocket.edge)
 
                 if DEBUG : print("View: EdgeDragEnd -- assigned Start & end Sockets to drag edge")
 
@@ -293,9 +338,13 @@ class QDMGraphicsView(QGraphicsView):
 
     def distanceBetweenClickAndReleaseIsOff(self, event):
 
+        #store current mouse position
         newMouseButtonReleaseScenePosition = self.mapToScene(event.pos())
+
         mouseSceneDistance = newMouseButtonReleaseScenePosition - self.lastMouseButtonClickedPosition
+
         edgeDragThresholdSquared = EDGE_START_DRAG_THRESHOLD * EDGE_START_DRAG_THRESHOLD
+
         return (mouseSceneDistance.x() * mouseSceneDistance.x() + mouseSceneDistance.y() *
                 mouseSceneDistance.y() > edgeDragThresholdSquared)
 

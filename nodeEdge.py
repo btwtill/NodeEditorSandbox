@@ -13,14 +13,13 @@ class Edge(Serializable):
 
         self.scene = scene
 
-
         self.startSocket = startSocket
         self.endSocket = endSocket
         self.edgeType = edgeType
 
-        if DEBUG : print("Edge: ", self.grEdge.posSource, "to", self.grEdge.posDestination)
-
         self.scene.addEdge(self)
+
+        if DEBUG: print("Edge: ", self.grEdge.posSource, "to", self.grEdge.posDestination)
 
     @property
     def startSocket(self): return self._startSocket
@@ -43,7 +42,10 @@ class Edge(Serializable):
     def edgeType(self): return self._edgeType
     @edgeType.setter
     def edgeType(self, value):
+        #If there is a graphical edge to it remove it from the graphics scene
+
         if hasattr(self, 'grEdge') and self.grEdge is not None:
+            if DEBUG : print("EDGE : DEBUG : has gredge ")
             self.scene.grScene.removeItem(self.grEdge)
 
         self._edgeType = value
