@@ -111,7 +111,9 @@ class Node(Serializable):
         )
 
     def deserialize(self, data, hashmap = {}):
-        print("Deserializing data", data)
+
+        if DEBUG : print("NODE : DEBUG : Deserializing data", data)
+
         self.id = data['id']
         hashmap[data['id']] = self
         self.title = data['title']
@@ -139,6 +141,6 @@ class Node(Serializable):
             newSocket.deserialize(socketData, hashmap)
             self.outputs.append(newSocket)
 
-        print(hashmap)
+        if DEBUG : print("NODE : DEBUG : Hashmap...", hashmap)
 
         return True

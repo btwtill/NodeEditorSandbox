@@ -66,10 +66,8 @@ class Scene(Serializable):
         )
 
     def deserialize(self, data, hashmap = {}):
-        print("Deserializing data", data)
 
         self.clearScene()
-
         hashmap = {}
 
         for nodeData in data["nodes"]:

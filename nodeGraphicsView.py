@@ -15,7 +15,7 @@ MODE_EDGE_CUT = 3
 EDGE_START_DRAG_THRESHOLD = 10
 
 #Debugging Mode
-DEBUG = True
+DEBUG = False
 
 class QDMGraphicsView(QGraphicsView):
     def __init__(self, graphicsScene, parent = None):
