@@ -268,6 +268,23 @@ class QDMGraphicsView(QGraphicsView):
         elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
             self.graphicsScene.scene.loadFromFile("graph.json.txt")
 
+        elif event.key() == Qt.Key.Key_1:
+            self.graphicsScene.scene.sceneHistory.storeHistory("Item A")
+        elif event.key() == Qt.Key.Key_2:
+            self.graphicsScene.scene.sceneHistory.storeHistory("Item B")
+        elif event.key() == Qt.Key.Key_3:
+            self.graphicsScene.scene.sceneHistory.storeHistory("Item C")
+        elif event.key() == Qt.Key.Key_4:
+            self.graphicsScene.scene.sceneHistory.undo()
+        elif event.key() == Qt.Key.Key_5:
+            self.graphicsScene.scene.sceneHistory.redo()
+        elif event.key() == Qt.Key.Key_H:
+            print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
+                   " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
+            print ("View : DEBUG : History: ", self.graphicsScene.scene.sceneHistory.historyStack)
+
+
+
         else:
             super().keyPressEvent(event)
 
