@@ -18,6 +18,9 @@ EDGE_START_DRAG_THRESHOLD = 10
 DEBUG = False
 
 class QDMGraphicsView(QGraphicsView):
+
+    scenePosChanged = pyqtSignal(int, int)
+
     def __init__(self, graphicsScene, parent = None):
         super().__init__(parent)
 
@@ -238,6 +241,12 @@ class QDMGraphicsView(QGraphicsView):
             self.cutline.linePoints.append(pos)
             self.cutline.update()
 
+        self.lastSceneMousePosition = self.mapToScene(event.pos())
+
+        self.scenePosChanged.emit(
+            int(self.lastSceneMousePosition.x()),
+            int(self.lastSceneMousePosition.y())
+        )
 
         super().mouseMoveEvent(event)
 
@@ -259,32 +268,33 @@ class QDMGraphicsView(QGraphicsView):
             self.scale(zoomFactor, zoomFactor)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+
+        if event.key() == Qt.Key.Key_Backspace:
             if not self.editingFlag:
                 self.deleteSelected()
             else:
                 super().keyPressEvent(event)
 
-        elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
-            self.graphicsScene.scene.saveToFile("graph.json.txt")
+        #elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
+         #   self.graphicsScene.scene.saveToFile("graph.json.txt")
 
-        elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
-            self.graphicsScene.scene.loadFromFile("graph.json.txt")
+        #elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
+         #   self.graphicsScene.scene.loadFromFile("graph.json.txt")
 
-        elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
-            self.graphicsScene.scene.sceneHistory.undo()
+        #elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
+         #   self.graphicsScene.scene.sceneHistory.undo()
 
-        elif self.isZAndCtrlAndAltPressed(event):
-            self.graphicsScene.scene.sceneHistory.redo()
+        #elif self.isZAndCtrlAndAltPressed(event):
+         #   self.graphicsScene.scene.sceneHistory.redo()
 
-        elif event.key() == Qt.Key.Key_H:
+        #elif event.key() == Qt.Key.Key_H:
 
-            print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
-                   " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
-            ix = 0
-            for item in self.graphicsScene.scene.sceneHistory.historyStack:
-                print ("View : DEBUG : History: #", ix, "--", item['desc'], self.graphicsScene.scene.sceneHistory.historyStack)
-                ix += 1
+         #   print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
+          #         " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
+           # ix = 0
+            #for item in self.graphicsScene.scene.sceneHistory.historyStack:
+             #   print ("View : DEBUG : History: #", ix, "--", item['desc'], self.graphicsScene.scene.sceneHistory.historyStack)
+              #  ix += 1
 
         else:
             super().keyPressEvent(event)

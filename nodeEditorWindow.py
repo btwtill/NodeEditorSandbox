@@ -1,4 +1,7 @@
-from PyQt5.QtWidgets import QMainWindow, QAction
+import os.path
+
+from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel
+from setuptools.command.editable_wheel import editable_wheel
 
 from nodeEditorWidget import NodeEditorWidget
 
@@ -9,6 +12,8 @@ class NodeEditorWindow(QMainWindow):
         super().__init__()
 
         self.initUI()
+
+        self.filename = None
 
     def createAction(self, name, shortcut, tooltip, callback):
 
@@ -24,16 +29,41 @@ class NodeEditorWindow(QMainWindow):
         menuBar = self.menuBar()
 
         fileMenu = menuBar.addMenu('&File')
-        fileMenu.addAction(self.createAction('&New', 'Ctrl+N', 'Create New Graph', self.onFileNew))
+        fileMenu.addAction(self.createAction('&New',
+                                             'Ctrl+N', 'Create New Graph', self.onFileNew))
         fileMenu.addSeparator()
-        fileMenu.addAction(self.createAction('&Open', 'Ctrl+O', 'Open File', self.onFileOpen))
-        fileMenu.addAction(self.createAction('&Save', 'Ctrl+S', 'Save File', self.onFileSave))
-        fileMenu.addAction(self.createAction('Save &As..', 'Ctrl+Shift+S', 'Save File As', self.onFileSaveAs))
+        fileMenu.addAction(self.createAction('&Open',
+                                             'Ctrl+O', 'Open File', self.onFileOpen))
+        fileMenu.addAction(self.createAction('&Save',
+                                             'Ctrl+S', 'Save File', self.onFileSave))
+        fileMenu.addAction(self.createAction('Save &As..',
+                                             'Ctrl+Shift+S', 'Save File As', self.onFileSaveAs))
         fileMenu.addSeparator()
-        fileMenu.addAction(self.createAction('E&xit', 'Ctrl+Q', 'Exit Application', self.close))
+        fileMenu.addAction(self.createAction('E&xit',
+                                             'Ctrl+Q', 'Exit Application', self.close))
+
+        editMenu = menuBar.addMenu('&Edit')
+
+        editMenu.addAction(self.createAction('&Undo',
+                                             'Ctrl+Z', 'Undo last Operation', self.onEditUndo))
+        editMenu.addAction(self.createAction('&Redo',
+                                             'Ctrl+Alt+Z', 'Redo last Operation', self.onEditRedo))
+
+        fileMenu.addSeparator()
+
+        editMenu.addAction(self.createAction('&Delete',
+                                             'Del',
+                                             'Delete Currently Selected Items',
+                                             self.onEditDelete))
 
         nodeEditor = NodeEditorWidget(self)
         self.setCentralWidget(nodeEditor)
+
+        self.statusBar().showMessage('')
+        self.statusMousePosition = QLabel('')
+        self.statusBar().addPermanentWidget(self.statusMousePosition)
+        nodeEditor.view.scenePosChanged.connect(self.onScenePosChanged)
+
 
         #set inital Window size
         self.setGeometry(200, 200, 800, 600)
@@ -44,15 +74,47 @@ class NodeEditorWindow(QMainWindow):
         # display
         self.show()
 
+    def onScenePosChanged(self, x, y):
+        self.statusMousePosition.setText("Scene Pos: [%d, %d]" % (x, y))
+
     def onFileNew(self):
         if DEBUG : print("Window : DEBUG : On File new!")
+        self.centralWidget().scene.clearScene()
 
     def onFileOpen(self):
         if DEBUG : print("Window : DEBUG : Open")
+        fname, filter = QFileDialog.getOpenFileName(self, ' Open graph from file')
+        if fname == '':
+            return
+        if os.path.isfile(fname):
+            self.centralWidget().scene.loadFromFile(fname)
 
     def onFileSave(self):
         if DEBUG : print("Window : DEBUG : Save")
+        if self.filename == None: return self.onFileSaveAs()
+        self.centralWidget().scene.saveToFile(self.filename)
+        self.statusBar().showMessage("Successfully saved %s" % self.filename)
 
     def onFileSaveAs(self):
         if DEBUG : print("Window : DEBUG : Save As")
+
+        fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File')
+
+        if fname == '':
+            return
+        self.filename = fname
+        self.onFileSave()
+
+    def onEditUndo(self):
+        if DEBUG : print("Window : DEBUG : On Edit Undo")
+        self.centralWidget().scene.sceneHistory.undo()
+
+    def onEditRedo(self):
+        self.centralWidget().scene.sceneHistory.redo()
+        if DEBUG : print("Window : DEBUG : On Edit Redo")
+
+
+    def onEditDelete(self):
+        if DEBUG : print("Window : DEBUG : On Edit Delete")
+        self.centralWidget().scene.grScene.views()[0].deleteSelected()
 
