@@ -1,10 +1,14 @@
 import json
 from collections import OrderedDict
+
+from nodeSceneClipboard import SceneClipboard
 from nodeSerializable import Serializable
 from nodeGraphicsScene import QDMGraphicsScene
 from nodeNode import Node
 from nodeEdge import Edge
 from nodeSceneHistory import SceneHistory
+
+DEBUG = True
 
 class Scene(Serializable):
     def __init__(self):
@@ -19,6 +23,8 @@ class Scene(Serializable):
         self.sceneHeight = 64000
 
         self.initUI()
+
+        self.clipboard = SceneClipboard(self)
 
     def initUI(self):
         self.grScene = QDMGraphicsScene(self)
@@ -53,6 +59,10 @@ class Scene(Serializable):
 
     def serialize(self):
         nodes, edges = [], []
+
+        if DEBUG : print("SCENE : DEBUG : current Scene Nodes: ", self.nodes)
+        if DEBUG: print("SCENE : DEBUG : current Scene Edges: ", self.edges)
+
         for node in self.nodes: nodes.append(node.serialize())
         for edge in self.edges: edges.append(edge.serialize())
 
@@ -65,15 +75,17 @@ class Scene(Serializable):
             ]
         )
 
-    def deserialize(self, data, hashmap = {}):
+    def deserialize(self, data, hashmap = {}, restoreId = True):
 
         self.clearScene()
         hashmap = {}
 
+        if restoreId : self.id = data['id']
+
         for nodeData in data["nodes"]:
-            Node(self).deserialize(nodeData, hashmap)
+            Node(self).deserialize(nodeData, hashmap, restoreId)
 
         for edgeData in data["edges"]:
-           Edge(self).deserialize(edgeData, hashmap)
+           Edge(self).deserialize(edgeData, hashmap, restoreId)
 
         return True

@@ -109,7 +109,6 @@ class QDMGraphicsView(QGraphicsView):
         super().mouseReleaseEvent(fakeEvent)
 
         #resetting the drag behaviour to enable drag selection
-        self.setDragMode(QGraphicsView.NoDrag)
         self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def leftMouseButtonPressEvent(self, event):
@@ -208,6 +207,7 @@ class QDMGraphicsView(QGraphicsView):
     def rightMouseButtonPressEvent(self, event):
 
         item = self.getItemAtClick(event)
+
         if DEBUG:
             if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting" ,
                                                         item.edge.startSocket, " <----> ", item.edge.endSocket)

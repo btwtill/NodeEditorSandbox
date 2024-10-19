@@ -118,9 +118,10 @@ class Edge(Serializable):
             ]
         )
 
-    def deserialize(self, data, hashmap = {}):
+    def deserialize(self, data, hashmap = {}, restoreId = True):
 
-        self.id = data['id']
+        if restoreId : self.id = data['id']
+
         self.startSocket = hashmap[data['start']]
         self.endSocket = hashmap[data['end']]
         self.edgeType = data['edgeType']

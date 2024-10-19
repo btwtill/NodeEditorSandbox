@@ -15,7 +15,20 @@ class QDMCutLine(QGraphicsItem):
         self.setZValue(2)
 
     def boundingRect(self):
-        return QRectF(0,0,1,1)
+        return self.shape().boundingRect()
+
+    def shape(self):
+        polygon = QPolygonF(self.linePoints)
+
+        if len(self.linePoints) > 1:
+            path = QPainterPath(self.linePoints[0])
+            for pt in self.linePoints[1:]:
+                path.lineTo(pt)
+        else:
+            path = QPainterPath(QPointF(0, 0))
+            path.lineTo(QPoint(1,1))
+
+        return path
 
     def paint(self, painter, option, widget = None):
         painter.setRenderHint(QPainter.Antialiasing)

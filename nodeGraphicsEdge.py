@@ -39,6 +39,12 @@ class QDMGraphicsEdge(QGraphicsPathItem):
     def setDestination(self, x,y):
         self.posDestination = [x, y]
 
+    def boundingRect(self):
+        return self.shape().boundingRect()
+
+    def shape(self):
+        return self.calculatePath()
+
     def paint(self, painter, QPainter=None, *args, **kwargs):
         self.setPath(self.calculatePath())
         self.calculatePath()
@@ -79,25 +85,24 @@ class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
         cpySource = 0
         cpyDestination = 0
 
-        startSocketPosition = self.edge.startSocket.position
+        if self.edge.startSocket is not None:
+            startSocketPosition = self.edge.startSocket.position
 
-        if self.posSource[0] > self.posDestination[0] and startSocketPosition in (RIGHT_TOP, RIGHT_BOTTOM) or self.posSource[0] < self.posDestination[0] and startSocketPosition in (LEFT_BOTTOM, LEFT_TOP):
-            cpxDestination *= -1
-            cpxSource *= -1
+            if self.posSource[0] > self.posDestination[0] and startSocketPosition in (RIGHT_TOP, RIGHT_BOTTOM) or self.posSource[0] < self.posDestination[0] and startSocketPosition in (LEFT_BOTTOM, LEFT_TOP):
+                cpxDestination *= -1
+                cpxSource *= -1
 
-            cpyDestination = (
-                    (self.posSource[1] - self.posDestination[1]) / math.fabs(
-                (self.posSource[1] - self.posDestination[1]) if (self.posSource[1] - self.posDestination[1]) != 0 else 0.00001
-                )
-            ) * EDGE_CP_ROUNDNESS
+                cpyDestination = (
+                        (self.posSource[1] - self.posDestination[1]) / math.fabs(
+                    (self.posSource[1] - self.posDestination[1]) if (self.posSource[1] - self.posDestination[1]) != 0 else 0.00001
+                    )
+                ) * EDGE_CP_ROUNDNESS
 
-            cpySource = (
-                    (self.posDestination[1] - self.posSource[1]) / math.fabs(
-                (self.posDestination[1] - self.posSource[1]) if (self.posDestination[1] - self.posSource[1]) != 0 else 0.00001
-                )
-            ) * EDGE_CP_ROUNDNESS
-
-
+                cpySource = (
+                        (self.posDestination[1] - self.posSource[1]) / math.fabs(
+                    (self.posDestination[1] - self.posSource[1]) if (self.posDestination[1] - self.posSource[1]) != 0 else 0.00001
+                    )
+                ) * EDGE_CP_ROUNDNESS
 
 
         path = QPainterPath(QPointF(self.posSource[0], self.posSource[1]))

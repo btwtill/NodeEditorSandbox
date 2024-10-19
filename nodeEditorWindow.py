@@ -1,6 +1,8 @@
+import json
 import os.path
+from textwrap import indent
 
-from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel
+from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel, QApplication
 from setuptools.command.editable_wheel import editable_wheel
 
 from nodeEditorWidget import NodeEditorWidget
@@ -48,6 +50,16 @@ class NodeEditorWindow(QMainWindow):
                                              'Ctrl+Z', 'Undo last Operation', self.onEditUndo))
         editMenu.addAction(self.createAction('&Redo',
                                              'Ctrl+Alt+Z', 'Redo last Operation', self.onEditRedo))
+
+        fileMenu.addSeparator()
+        editMenu.addAction(self.createAction('Cu&t',
+                                             'Ctrl+X', 'Cut Selected Items', self.onEditCut))
+
+        editMenu.addAction(self.createAction('&Copy',
+                                             'Ctrl+C', 'Copy Selected Items to clipboard', self.onEditCopy))
+
+        editMenu.addAction(self.createAction('&Paste',
+                                             'Ctrl+V', 'Paste items from Clipboard', self.onEditPaste))
 
         fileMenu.addSeparator()
 
@@ -118,3 +130,30 @@ class NodeEditorWindow(QMainWindow):
         if DEBUG : print("Window : DEBUG : On Edit Delete")
         self.centralWidget().scene.grScene.views()[0].deleteSelected()
 
+    def onEditCut(self):
+        data = self.centralWidget().scene.clipboard.serializeSelected(delete = True)
+        strData = json.dumps(data, indent = 4)
+        QApplication.instance().clipboard().setText(strData)
+
+    def onEditCopy(self):
+        data = self.centralWidget().scene.clipboard.serializeSelected(delete=False)#
+
+        if DEBUG : print("NodeEditorWindow : DEBUG : Serielized Data : ", data)
+
+        strData = json.dumps(data, indent=4)
+
+        QApplication.instance().clipboard().setText(strData)
+
+    def onEditPaste(self):
+        raw_data = QApplication.instance().clipboard().text()
+        try:
+            data = json.loads(raw_data)
+        except ValueError as e:
+            print("Pasting not valid json data!", e)
+            return
+
+        if 'nodes' not in data:
+            print("JSON does not contain any nodes!")
+            return
+
+        self.centralWidget().scene.clipboard.deserializeFromClipboard(data)

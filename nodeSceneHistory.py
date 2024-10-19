@@ -1,6 +1,8 @@
+from errno import EBUSY
+
 from nodeGraphicsEdge import QDMGraphicsEdge
 
-DEBUG = False
+DEBUG = True
 
 class SceneHistory():
     def __init__(self, scene):
@@ -50,6 +52,9 @@ class SceneHistory():
 
 
     def createHistoryStamp(self, desc):
+
+        if DEBUG : print("HISTORY : DEBUG : Current Selected history Stamp Items", self.scene.grScene.selectedItems())
+
         selectedObjects = {
             'nodes' : [],
             'edges' : [],
