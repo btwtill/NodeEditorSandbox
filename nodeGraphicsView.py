@@ -15,7 +15,7 @@ MODE_EDGE_CUT = 3
 EDGE_START_DRAG_THRESHOLD = 10
 
 #Debugging Mode
-DEBUG = False
+DEBUG = True
 
 class QDMGraphicsView(QGraphicsView):
 
@@ -25,6 +25,7 @@ class QDMGraphicsView(QGraphicsView):
         super().__init__(parent)
 
         self.graphicsScene = graphicsScene
+        self.rubberBandDraggingRectangle = False
 
         self.initUI()
 
@@ -148,7 +149,7 @@ class QDMGraphicsView(QGraphicsView):
             res = self.edgeDragEnd(item)
             if res: return
 
-        # if the press is to the voide check for ctrl key  (edge cutting )
+        # if the press is to the void check for ctrl key  (edge cutting )
         if item == None:
             if event.modifiers() & Qt.Modifier.CTRL:
                 self.mode = MODE_EDGE_CUT
@@ -162,6 +163,8 @@ class QDMGraphicsView(QGraphicsView):
                 #indicate the edge cut mode with a different cursor
                 QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
                 return
+            else:
+                self.rubberBandDraggingRectangle = True
 
         super().mousePressEvent(event)
 
@@ -199,8 +202,9 @@ class QDMGraphicsView(QGraphicsView):
             self.mode = MODE_NOOP
             return
 
-        if self.dragMode() == QGraphicsView.RubberBandDrag:
+        if self.rubberBandDraggingRectangle:
             self.graphicsScene.scene.sceneHistory.storeHistory("Selection Changed")
+            self.rubberBandDraggingRectangle = False
 
         super().mouseReleaseEvent(event)
 
