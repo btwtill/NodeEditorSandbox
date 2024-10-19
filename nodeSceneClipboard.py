@@ -34,7 +34,7 @@ class SceneClipboard():
             if edge.startSocket.id in selectedSockets and edge.endSocket.id in selectedSockets:
                 pass
             else:
-                if DEBUG : print("CLIPBOARD : serealize selected, adding edge to edged that need to be deleted", edge)
+                if DEBUG : print("CLIPBOARD : serialize selected, adding edge to edged that need to be deleted", edge)
                 edgeToRemove.append(edge)
 
         for edge in edgeToRemove:
@@ -63,7 +63,7 @@ class SceneClipboard():
 
     def deserializeFromClipboard(self, data):
 
-        if DEBUG : print("CIPBOARD : DEBUG : Deserializing current Clipboard")
+        if DEBUG : print("CLIPBOARD : DEBUG : Deserializing current Clipboard")
 
         hashmap = {}
 
