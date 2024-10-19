@@ -1,4 +1,4 @@
-from typing import OrderedDict
+from collections import OrderedDict
 from nodeNode import Node
 from nodeEdge import Edge
 from nodeGraphicsEdge import QDMGraphicsEdge
@@ -49,18 +49,17 @@ class SceneClipboard():
         for edge in selectedEdges:
             edge_final.append(edge.serialize())
 
-        data = OrderedDict([
-            ("nodes", selectedNodes),
-            ("edges", edge_final),
-            ]
-        )
-
         if delete :
             for node in selectedNodes:
                 self.scene.grScene.views()[0].deleteSelected()
                 self.scene.sceneHistory.storeHistory("Cut out Elements From Scene", setModified = True)
 
-        return data
+
+        return OrderedDict([
+            ("nodes", selectedNodes),
+            ("edges", edge_final),
+            ]
+        )
 
     def deserializeFromClipboard(self, data):
 
