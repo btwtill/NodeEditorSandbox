@@ -2,7 +2,7 @@ import json
 import os.path
 from textwrap import indent
 
-from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel, QApplication
+from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel, QApplication, QMessageBox
 from setuptools.command.editable_wheel import editable_wheel
 
 from nodeEditorWidget import NodeEditorWidget
@@ -13,9 +13,9 @@ class NodeEditorWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.initUI()
-
         self.filename = None
+
+        self.initUI()
 
     def createAction(self, name, shortcut, tooltip, callback):
 
@@ -69,6 +69,8 @@ class NodeEditorWindow(QMainWindow):
                                              self.onEditDelete))
 
         nodeEditor = NodeEditorWidget(self)
+        nodeEditor.scene.addHasBeenModifiedListener(self.changeTitle)
+
         self.setCentralWidget(nodeEditor)
 
         self.statusBar().showMessage('')
@@ -80,32 +82,53 @@ class NodeEditorWindow(QMainWindow):
         #set inital Window size
         self.setGeometry(200, 200, 800, 600)
 
-        #set widget window title
-        self.setWindowTitle('MNRB')
+        self.changeTitle()
 
         # display
         self.show()
+
+    def changeTitle(self):
+        title = "MNRB - "
+
+        if self.filename is None:
+            title += "New"
+        else:
+            title += os.path.basename(self.filename)
+
+        if self.centralWidget().scene.hasBeenModified:
+            title += "*"
+
+        self.setWindowTitle(title)
 
     def onScenePosChanged(self, x, y):
         self.statusMousePosition.setText("Scene Pos: [%d, %d]" % (x, y))
 
     def onFileNew(self):
-        if DEBUG : print("Window : DEBUG : On File new!")
-        self.centralWidget().scene.clearScene()
+        if self.maybeSave():
+            if DEBUG : print("Window : DEBUG : On File new!")
+            self.centralWidget().scene.clearScene()
+            self.filename = None
+            self.changeTitle()
+
 
     def onFileOpen(self):
-        if DEBUG : print("Window : DEBUG : Open")
-        fname, filter = QFileDialog.getOpenFileName(self, ' Open graph from file')
-        if fname == '':
-            return
-        if os.path.isfile(fname):
-            self.centralWidget().scene.loadFromFile(fname)
+        if self.maybeSave():
+            if DEBUG : print("Window : DEBUG : Open")
+            fname, filter = QFileDialog.getOpenFileName(self, ' Open graph from file')
+            if fname == '':
+                return
+            if os.path.isfile(fname):
+                self.centralWidget().scene.loadFromFile(fname)
+                self.filename = fname
+                self.changeTitle()
+
 
     def onFileSave(self):
         if DEBUG : print("Window : DEBUG : Save")
         if self.filename == None: return self.onFileSaveAs()
         self.centralWidget().scene.saveToFile(self.filename)
         self.statusBar().showMessage("Successfully saved %s" % self.filename)
+        return True
 
     def onFileSaveAs(self):
         if DEBUG : print("Window : DEBUG : Save As")
@@ -113,9 +136,11 @@ class NodeEditorWindow(QMainWindow):
         fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File')
 
         if fname == '':
-            return
+            return False
+
         self.filename = fname
         self.onFileSave()
+        return True
 
     def onEditUndo(self):
         if DEBUG : print("Window : DEBUG : On Edit Undo")
@@ -157,3 +182,25 @@ class NodeEditorWindow(QMainWindow):
             return
 
         self.centralWidget().scene.clipboard.deserializeFromClipboard(data)
+
+    def isModified(self):
+        return self.centralWidget().scene.hasBeenModified
+
+    def closeEvent(self, event):
+        if self.maybeSave():
+            event.accept()
+        else:
+            event.ignore()
+
+    def maybeSave(self):
+        if not self.isModified():
+            return True
+
+        result = QMessageBox.warning(self, "About to loose your work!", "The file has been modified.",
+                                     QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+
+        if result == QMessageBox.Save:
+            return self.onFileSave()
+        elif result == QMessageBox.Cancel:
+            return False
+        else: return True

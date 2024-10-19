@@ -59,7 +59,7 @@ class QDMGraphicsNode(QGraphicsItem):
         if self.wasMoved:
             self.wasMoved = False
 
-            self.node.scene.sceneHistory.storeHistory("Moved Node")
+            self.node.scene.sceneHistory.storeHistory("Moved Node", setModified = True)
 
     def initUI(self):
         self.setFlag(QGraphicsItem.ItemIsSelectable)

@@ -2,7 +2,7 @@ from errno import EBUSY
 
 from nodeGraphicsEdge import QDMGraphicsEdge
 
-DEBUG = False
+DEBUG = True
 
 class SceneHistory():
     def __init__(self, scene):
@@ -33,7 +33,11 @@ class SceneHistory():
         self.restoreHistoryStamp(self.historyStack[self.historyCurrentStep])
 
 
-    def storeHistory(self, desc):
+    def storeHistory(self, desc, setModified = False):
+
+        if setModified:
+            self.scene.hasBeenModified = True
+
         if DEBUG : print("HISTORY : DEBUG : Storing History" , '"%s"' % desc, ".... currentStep: @%d: " %
                          self.historyCurrentStep, "(%d)" % len(self.historyStack))
 
