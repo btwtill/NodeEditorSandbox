@@ -8,7 +8,7 @@ from nodeNode import Node
 from nodeEdge import Edge
 from nodeSceneHistory import SceneHistory
 
-DEBUG = True
+DEBUG = False
 
 class Scene(Serializable):
     def __init__(self):
@@ -56,10 +56,12 @@ class Scene(Serializable):
         self.edges.append(edge)
 
     def removeNode(self, node):
-        self.nodes.remove(node)
+        if node in self.nodes: self.nodes.remove(node)
+        else: print("!Warning", "Scene::removeNode", "wanna remove node", node, "from self.nodes but its not there")
 
     def removeEdge(self, edge):
-        self.edges.remove(edge)
+        if edge in self.edges: self.edges.remove(edge)
+        else: print("!Warning", "Scene::removeEdge", "wanna remove edge", edge, "from self.edge but its not there")
 
     def clearScene(self):
         while len(self.nodes) > 0:

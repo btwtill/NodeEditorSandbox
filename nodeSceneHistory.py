@@ -63,6 +63,7 @@ class SceneHistory():
             'nodes' : [],
             'edges' : [],
         }
+
         for item in self.scene.grScene.selectedItems():
             if hasattr(item, 'node'):
                 selectedObjects['nodes'].append(item.node.id)

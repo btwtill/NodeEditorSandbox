@@ -10,13 +10,14 @@ RIGHT_BOTTOM = 4
 DEBUG = False
 
 class Socket(Serializable):
-    def __init__(self, node, index=0, position=LEFT_TOP, socketType = 0):
+    def __init__(self, node, index=0, position=LEFT_TOP, socketType = 0, multiEdges = True):
         super().__init__()
 
         self.node = node
         self.index = index
         self.position = position
         self.socketType = socketType
+        self.isMultiEdges = multiEdges
 
         if DEBUG : print("Socket -- creating with" ,self.index, self.position, "for node", self.node)
 
@@ -24,7 +25,7 @@ class Socket(Serializable):
 
         self.grSocket.setPos(*self.node.getSocketPosition(index, position))
 
-        self.edge = None
+        self.edges = []
 
     def getSocketPosition(self):
 
@@ -34,19 +35,26 @@ class Socket(Serializable):
 
         return result
 
-    def setConnectedEdge(self, edge = None):
-        self.edge = edge
+    def addEdge(self, edge):
+        self.edges.append(edge)
 
-    def hasEdge(self):
-        return self.edge is not None
+    def removeEdge(self, edge):
+        if edge in self.edges: self.edges.remove(edge)
+        else: print("!Warning", "Socket:removeEdge", "wanna remove edge", edge, "from self.edges but its not there")
+
+    def removeAllEdges(self):
+        while self.edges:
+            edge = self.edges.pop(0)
+            edge.remove()
 
     def __str__(self):
-        return "<Socket %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+        return "<Socket %s %s..%s>" % ("ME" if self.isMultiEdges else "SE",hex(id(self))[2:5], hex(id(self))[-3:])
 
     def serialize(self):
         return OrderedDict([
             ("id" , self.id),
             ("index", self.index),
+            ("isMultiEdge", self.isMultiEdges),
             ("position", self.position),
             ("socketType", self.socketType)
             ]
@@ -54,7 +62,7 @@ class Socket(Serializable):
 
     def deserialize(self, data, hashmap = {}, restoreId = True):
         if restoreId : self.id = data['id']
-
+        self.isMultiEdges = data["isMultiEdge"]
         hashmap[data['id']] = self
 
         return True

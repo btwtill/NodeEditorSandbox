@@ -5,13 +5,17 @@ from nodeSerializable import Serializable
 EDGE_TYPE_DIRECT = 1
 EDGE_TYPE_BEZIER = 2
 
-DEBUG = False
+DEBUG = True
 
 class Edge(Serializable):
     def __init__(self, scene, startSocket = None, endSocket = None, edgeType = EDGE_TYPE_DIRECT):
         super().__init__()
 
         self.scene = scene
+
+        #default init
+        self._startSocket = None
+        self._endSocket = None
 
         self.startSocket = startSocket
         self.endSocket = endSocket
@@ -25,18 +29,28 @@ class Edge(Serializable):
     def startSocket(self): return self._startSocket
     @startSocket.setter
     def startSocket(self, value):
+        #if we were assigned to some socket ebfore, delete from the socket
+        if self._startSocket is not None:
+            self._startSocket.removeEdge(self)
+        #assign new start socket
         self._startSocket = value
+        # add edge to socket class
         if self.startSocket is not None:
-            self.startSocket.edge = self
+            self.startSocket.addEdge(self)
 
     @property
     def endSocket(self):
         return self._endSocket
     @endSocket.setter
     def endSocket(self, value):
+        # if we were assigned to some socket bfore, delete from the socket
+        if self._endSocket is not None:
+            self._endSocket.removeEdge(self)
+        #assign new end socket
         self._endSocket = value
+        #add edge to socket class
         if self.endSocket is not None:
-            self.endSocket.edge = self
+            self.endSocket.addEdge(self)
 
     @property
     def edgeType(self): return self._edgeType
@@ -83,10 +97,11 @@ class Edge(Serializable):
         self.grEdge.update()
 
     def removeFromSockets(self):
-        if self.startSocket is not None:
-            self.startSocket.edge = None
-        if self.endSocket is not None:
-            self.endSocket.edge = None
+        # @TODO: Fix me
+        #if self.startSocket is not None:
+        #    self.startSocket.removeEdge(None)
+        #if self.endSocket is not None:
+        #    self.endSocket.removeEdge(None)
 
         self.endSocket = None
         self.startSocket = None
@@ -94,10 +109,15 @@ class Edge(Serializable):
     def remove(self):
         if DEBUG: print("Edge : DEBUG : removing edge", self)
         if DEBUG: print("Edge : DEBUG : removing edge from Sockets", self)
+
         self.removeFromSockets()
+
         if DEBUG: print("Edge : DEBUG : removing graphical Edge from Scene", self)
+
         self.scene.grScene.removeItem(self.grEdge)
+
         self.grEdge = None
+
         if DEBUG: print("Edge : DEBUG : removing edge from Scene", self)
 
         try:

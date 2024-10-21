@@ -32,13 +32,13 @@ class Node(Serializable):
 
         counter = 0
         for item in inputs:
-            socket = Socket(node=self, index = counter, position = LEFT_TOP, socketType = item)
+            socket = Socket(node=self, index = counter, position = LEFT_TOP, socketType = item, multiEdges=False)
             counter += 1
             self.inputs.append(socket)
 
         counter = 0
         for item in outputs:
-            socket = Socket(node = self, index = counter, position = RIGHT_TOP, socketType = item)
+            socket = Socket(node = self, index = counter, position = RIGHT_TOP, socketType = item, multiEdges=True)
             counter += 1
             self.outputs.append(socket)
 
@@ -71,17 +71,17 @@ class Node(Serializable):
 
     def updateConnectedEdges(self):
         for socket in self.inputs + self.outputs:
-            if socket.hasEdge():
-                socket.edge.updatePositions()
+            for edge in socket.edges:
+                edge.updatePositions()
 
     def remove(self):
         if DEBUG : print("Node : DEBUG : removing node", self)
         if DEBUG : print("Node : DEBUG : removing all edges form sockets")
 
         for socket in (self.inputs + self.outputs):
-            if socket.hasEdge():
-                if DEBUG : print("Node : DEBUG : removing edge ", socket.edge, "From Socket", socket)
-                socket.edge.remove()
+            for edge in socket.edges:
+                if DEBUG : print("Node : DEBUG : from socket ", socket, "edge:", edges)
+                edge.remove()
         if DEBUG:  print("Node : DEBUG : removing gr Node")
         self.scene.grScene.removeItem(self.grNode)
         self.grNode = None
