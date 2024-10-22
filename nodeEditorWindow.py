@@ -26,16 +26,11 @@ class NodeEditorWindow(QMainWindow):
         self.createActions()
         self.createMenus()
 
-        nodeEditor = NodeEditorWidget(self)
-        nodeEditor.scene.addHasBeenModifiedListener(self.changeTitle)
+        self.nodeEditor = NodeEditorWidget(self)
+        self.nodeEditor.scene.addHasBeenModifiedListener(self.changeTitle)
 
-        self.setCentralWidget(nodeEditor)
-
-        self.statusBar().showMessage('')
-        self.statusMousePosition = QLabel('')
-        self.statusBar().addPermanentWidget(self.statusMousePosition)
-        nodeEditor.view.scenePosChanged.connect(self.onScenePosChanged)
-
+        self.setCentralWidget(self.nodeEditor)
+        self.createStatusBar()
 
         #set inital Window size
         self.setGeometry(200, 200, 800, 600)
@@ -44,6 +39,13 @@ class NodeEditorWindow(QMainWindow):
 
         # display
         self.show()
+
+    def createStatusBar(self):
+
+        self.statusBar().showMessage('')
+        self.statusMousePosition = QLabel('')
+        self.statusBar().addPermanentWidget(self.statusMousePosition)
+        self.nodeEditor.view.scenePosChanged.connect(self.onScenePosChanged)
 
     def createActions(self):
 

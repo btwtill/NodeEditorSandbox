@@ -83,7 +83,20 @@ class Calculator(NodeEditorWindow):
         self.helpMenu.addAction(self.aboutAction)
 
     def updateWindowMenu(self):
-        pass
+        self.windowMenu.clear()
+        self.windowMenu.addAction(self.closeAction)
+        self.windowMenu.addAction(self.closeAllAction)
+        self.windowMenu.addSeparator()
+        self.windowMenu.addAction(self.tileAction)
+        self.windowMenu.addAction(self.cascadeAction)
+        self.windowMenu.addSeparator()
+        self.windowMenu.addAction(self.nextAction)
+        self.windowMenu.addAction(self.previouseAction)
+        self.windowMenu.addAction(self.nextAction)
+        self.windowMenu.addAction(self.separatorAction)
+
+        windows = self.mdiArea.subWindowList()
+        self.separatorAction.setVisible(len(windows) !=0 )
 
     def createActions(self):
         super().createActions()
