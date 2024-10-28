@@ -2,6 +2,7 @@ from idlelib.iomenu import encoding
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+import os
 
 from nodeEdge import Edge, EDGE_TYPE_DIRECT, EDGE_TYPE_BEZIER
 from nodeNode import Node
@@ -17,6 +18,8 @@ class NodeEditorWidget(QWidget):
         #load nodestyle from stylesheet
         self.styleSheetFileName = 'qss/nodestyle.qss'
         self.loadStyleSheet(self.styleSheetFileName)
+
+        self.filename = None
 
         #initiate the Window
         self.initUI()
@@ -36,6 +39,17 @@ class NodeEditorWidget(QWidget):
         self.layout.addWidget(self.view)
 
         self.addNodes()
+
+    def isFileNameSet(self):
+        return self.filename is not None
+
+    def isModified(self):
+        return self.scene.hasBeenModified
+
+    def getUserFriendlyFileName(self):
+        name = os.path.basename(self.filename) if self.isFileNameSet() else "New Graph"
+
+        return name + ('*' if self.isModified() else '')
 
     def loadStyleSheet(self, filename):
         print("loading Style")

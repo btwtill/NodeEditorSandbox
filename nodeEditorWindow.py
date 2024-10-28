@@ -17,8 +17,6 @@ class NodeEditorWindow(QMainWindow):
         self.nameCompany = "TLPF"
         self.nameProduct = "NodeEditor"
 
-        self.filename = None
-
         self.initUI()
 
     def initUI(self):
@@ -27,7 +25,7 @@ class NodeEditorWindow(QMainWindow):
         self.createMenus()
 
         self.nodeEditor = NodeEditorWidget(self)
-        self.nodeEditor.scene.addHasBeenModifiedListener(self.changeTitle)
+        self.nodeEditor.scene.addHasBeenModifiedListener(self.setTitle)
 
         self.setCentralWidget(self.nodeEditor)
         self.createStatusBar()
@@ -35,7 +33,7 @@ class NodeEditorWindow(QMainWindow):
         #set inital Window size
         self.setGeometry(200, 200, 800, 600)
 
-        self.changeTitle()
+        self.setTitle()
 
         # display
         self.show()
@@ -96,16 +94,10 @@ class NodeEditorWindow(QMainWindow):
         self.fileMenu.addSeparator()
         self.editMenu.addAction(self.actionDelete)
 
-    def changeTitle(self):
+    def setTitle(self):
         title = "MNRB - "
 
-        if self.filename is None:
-            title += "New"
-        else:
-            title += os.path.basename(self.filename)
-
-        if self.centralWidget().scene.hasBeenModified:
-            title += "*"
+        title += self.getCurrentNodeEditorWidget().getUserFriendlyFileName()
 
         self.setWindowTitle(title)
 
@@ -115,10 +107,9 @@ class NodeEditorWindow(QMainWindow):
     def onFileNew(self):
         if self.maybeSave():
             if DEBUG : print("Window : DEBUG : On File new!")
-            self.centralWidget().scene.clearScene()
+            self.getCurrentNodeEditorWidget().scene.clearScene()
             self.filename = None
-            self.changeTitle()
-
+            self.setTitle()
 
     def onFileOpen(self):
         if self.maybeSave():
@@ -127,14 +118,14 @@ class NodeEditorWindow(QMainWindow):
             if fname == '':
                 return
             if os.path.isfile(fname):
-                self.centralWidget().scene.loadFromFile(fname)
+                self.getCurrentNodeEditorWidget().scene.loadFromFile(fname)
                 self.filename = fname
-                self.changeTitle()
+                self.setTitle()
 
     def onFileSave(self):
         if DEBUG : print("Window : DEBUG : Save")
         if self.filename == None: return self.onFileSaveAs()
-        self.centralWidget().scene.saveToFile(self.filename)
+        self.getCurrentNodeEditorWidget().scene.saveToFile(self.filename)
         self.statusBar().showMessage("Successfully saved %s" % self.filename)
         return True
 
@@ -152,24 +143,23 @@ class NodeEditorWindow(QMainWindow):
 
     def onEditUndo(self):
         if DEBUG : print("Window : DEBUG : On Edit Undo")
-        self.centralWidget().scene.sceneHistory.undo()
+        self.getCurrentNodeEditorWidget().scene.sceneHistory.undo()
 
     def onEditRedo(self):
-        self.centralWidget().scene.sceneHistory.redo()
+        self.getCurrentNodeEditorWidget().scene.sceneHistory.redo()
         if DEBUG : print("Window : DEBUG : On Edit Redo")
-
 
     def onEditDelete(self):
         if DEBUG : print("Window : DEBUG : On Edit Delete")
-        self.centralWidget().scene.grScene.views()[0].deleteSelected()
+        self.getCurrentNodeEditorWidget().scene.grScene.views()[0].deleteSelected()
 
     def onEditCut(self):
-        data = self.centralWidget().scene.clipboard.serializeSelected(delete = True)
+        data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete = True)
         strData = json.dumps(data, indent = 4)
         QApplication.instance().clipboard().setText(strData)
 
     def onEditCopy(self):
-        data = self.centralWidget().scene.clipboard.serializeSelected(delete=False)#
+        data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete=False)#
 
         if DEBUG : print("NodeEditorWindow : DEBUG : Serielized Data : ", data)
 
@@ -189,10 +179,13 @@ class NodeEditorWindow(QMainWindow):
             print("JSON does not contain any nodes!")
             return
 
-        self.centralWidget().scene.clipboard.deserializeFromClipboard(data)
+        self.getCurrentNodeEditorWidget().scene.clipboard.deserializeFromClipboard(data)
 
     def isModified(self):
-        return self.centralWidget().scene.hasBeenModified
+        return self.getCurrentNodeEditorWidget().scene.hasBeenModified
+
+    def getCurrentNodeEditorWidget(self):
+        return self.centralWidget()
 
     def closeEvent(self, event):
         if self.maybeSave():

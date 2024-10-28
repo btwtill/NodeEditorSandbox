@@ -6,7 +6,7 @@ from PyQt5.QtCore import *
 
 from nodeEditorWindow import NodeEditorWindow
 from utils import dumpException
-
+from examples.calculatorExample.calculatorSubWindow import CalculatorSubWindow
 
 class Calculator(NodeEditorWindow):
 
@@ -98,37 +98,47 @@ class Calculator(NodeEditorWindow):
         windows = self.mdiArea.subWindowList()
         self.separatorAction.setVisible(len(windows) !=0 )
 
+        for i, window in enumerate(windows):
+            child = window.widget()
+            text = "%d %s" % (i + 1, child.getUserFriendlyFileName())
+            if i < 9:
+                text = '&' + text
+
+            action = self.windowMenu.addAction(text)
+            action.setCheckable(True)
+            action.setChecked(child is self.activeMdiChild())
+            action.triggered.connect(self.windowMapper.map)
+            self.windowMapper.setMapping(action, window)
+
     def createActions(self):
         super().createActions()
 
         self.closeAction = QAction("Cl&ose", self,
                                    statusTip="Close the active window", triggered=self.mdiArea.closeActiveSubWindow)
-
         self.closeAllAction = QAction("Close &All", self,
                                    statusTip="Close all windows", triggered=self.mdiArea.closeActiveSubWindow)
-
         self.tileAction = QAction("&Tile", self,
                                   statusTip = "Tile the windows", triggered = self.mdiArea.tileSubWindows)
-
         self.cascadeAction = QAction("&Cascade", self,
                                      statusTip = "Cascade the Windows", triggered = self.mdiArea.cascadeSubWindows)
-
         self.nextAction = QAction("Ne&xt", self,
                                   shortcut=QKeySequence.NextChild, statusTip="Move the focus to the next Window",
                                   triggered=self.mdiArea.activateNextSubWindow)
-
         self.previouseAction = QAction("Pre&vious", self,
                                        shortcut=QKeySequence.PreviousChild,
                                        statusTip="Move the focus to the previouse Window",
                                        triggered=self.mdiArea.activatePreviousSubWindow)
-
         self.separatorAction = QAction(self)
         self.separatorAction.setSeparator(True)
-
         self.aboutAction = QAction("&About", self,
                                    statusTip="Shot the applications about box", triggered=self.about)
 
-    
+    def onFileNew(self):
+        try:
+            subWindow = self.createMdiChild()
+            subWindow.show()
+        except Exception as e: dumpException(e)
+
     def createToolBars(self):
         pass
 
@@ -143,6 +153,19 @@ class Calculator(NodeEditorWindow):
         QMessageBox.about(self, "About Calculator Example",
                           "This is a test Example Calculator Project"
                           "demonstating the use of multiple windows in an application with the use of the Node Editor")
+
+    def activeMdiChild(self):
+        #We are Returning nodeEditor Widget Here
+        activeSubWindow = self.mdiArea.activeSubWindow()
+        if activeSubWindow:
+            return activeSubWindow
+        return None
+
+    def createMdiChild(self):
+        nodeEditor = CalculatorSubWindow()
+        subWindow = self.mdiArea.addSubWindow(nodeEditor)
+
+        return subWindow
 
     def closeEvent(self, event):
         self.mdiArea.closeAllSubWindows()
