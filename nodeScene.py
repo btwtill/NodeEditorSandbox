@@ -1,4 +1,5 @@
 import json
+import os
 from collections import OrderedDict
 
 from nodeSceneClipboard import SceneClipboard
@@ -7,8 +8,13 @@ from nodeGraphicsScene import QDMGraphicsScene
 from nodeNode import Node
 from nodeEdge import Edge
 from nodeSceneHistory import SceneHistory
+from utils import dumpException
 
 DEBUG = False
+
+class InvalidFile(Exception): pass
+
+
 
 class Scene(Serializable):
     def __init__(self):
@@ -79,10 +85,14 @@ class Scene(Serializable):
     def loadFromFile(self, filename):
         with open(filename, "r") as file:
             rawData = file.read()
-            data = json.loads(rawData)
-            self.deserialize(data)
-
-            self.hasBeenModified = False
+            try:
+                data = json.loads(rawData)
+                self.deserialize(data)
+                self.hasBeenModified = False
+            except json.JSONDecodeError:
+                raise InvalidFile("%s is not a valid Json file" % os.path.basename(filename))
+            except Exception as e:
+                dumpException(e)
 
     def serialize(self):
         nodes, edges = [], []

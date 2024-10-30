@@ -4,7 +4,6 @@ from textwrap import indent
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel, QApplication, QMessageBox
-from setuptools.command.editable_wheel import editable_wheel
 
 from nodeEditorWidget import NodeEditorWidget
 

@@ -6,24 +6,27 @@
         {
             "id": 2586529819408,
             "title": "New Amazing Node",
-            "pos_x": 72.0,
-            "pos_y": 43.0,
+            "pos_x": 240.25,
+            "pos_y": 40.0,
             "inputs": [
                 {
                     "id": 2586529870928,
                     "index": 0,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 },
                 {
                     "id": 2586529871568,
                     "index": 1,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 },
                 {
                     "id": 2586529872272,
                     "index": 2,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 }
@@ -32,6 +35,7 @@
                 {
                     "id": 2586529872976,
                     "index": 0,
+                    "isMultiEdge": true,
                     "position": 3,
                     "socketType": 1
                 }
@@ -41,18 +45,20 @@
         {
             "id": 2586529873680,
             "title": "Second node",
-            "pos_x": -242.0,
-            "pos_y": -159.0,
+            "pos_x": -188.25,
+            "pos_y": -182.75,
             "inputs": [
                 {
                     "id": 2586529891024,
                     "index": 0,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 2
                 },
                 {
                     "id": 2586529891728,
                     "index": 1,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 2
                 }
@@ -61,18 +67,21 @@
                 {
                     "id": 2586529892432,
                     "index": 0,
+                    "isMultiEdge": true,
                     "position": 3,
                     "socketType": 3
                 },
                 {
                     "id": 2586529893136,
                     "index": 1,
+                    "isMultiEdge": true,
                     "position": 3,
                     "socketType": 3
                 },
                 {
                     "id": 2586529893840,
                     "index": 2,
+                    "isMultiEdge": true,
                     "position": 3,
                     "socketType": 3
                 }
@@ -80,52 +89,38 @@
             "content": {}
         },
         {
-            "id": 2586529894544,
-            "title": "Third Node",
-            "pos_x": 359.0,
-            "pos_y": -209.0,
+            "id": 1714028244736,
+            "title": "New Amazing Node",
+            "pos_x": 380.125,
+            "pos_y": -161.0,
             "inputs": [
                 {
-                    "id": 2586529895440,
+                    "id": 1714028244832,
                     "index": 0,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 },
                 {
-                    "id": 2586529896144,
+                    "id": 1714028244880,
                     "index": 1,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 },
                 {
-                    "id": 2586529896848,
+                    "id": 1714028243344,
                     "index": 2,
-                    "position": 1,
-                    "socketType": 1
-                },
-                {
-                    "id": 2586529897552,
-                    "index": 3,
+                    "isMultiEdge": false,
                     "position": 1,
                     "socketType": 1
                 }
             ],
             "outputs": [
                 {
-                    "id": 2586529898256,
+                    "id": 1714028243392,
                     "index": 0,
-                    "position": 3,
-                    "socketType": 1
-                },
-                {
-                    "id": 2586529898960,
-                    "index": 1,
-                    "position": 3,
-                    "socketType": 1
-                },
-                {
-                    "id": 2586529899664,
-                    "index": 2,
+                    "isMultiEdge": true,
                     "position": 3,
                     "socketType": 1
                 }
@@ -147,22 +142,16 @@
             "end": 2586529871568
         },
         {
-            "id": 2586529901520,
+            "id": 2696311660400,
             "edgeType": 2,
-            "start": 2586529872976,
-            "end": 2586529896144
-        },
-        {
-            "id": 2586529905680,
-            "edgeType": 2,
-            "start": 2586529898256,
+            "start": 2586529893136,
             "end": 2586529872272
         },
         {
-            "id": 2586529901904,
+            "id": 1714028243200,
             "edgeType": 2,
             "start": 2586529893136,
-            "end": 2586529897552
+            "end": 1714028244880
         }
     ]
 }

@@ -50,6 +50,13 @@ class Socket(Serializable):
     def __str__(self):
         return "<Socket %s %s..%s>" % ("ME" if self.isMultiEdges else "SE",hex(id(self))[2:5], hex(id(self))[-3:])
 
+    def determinMultiEdges(self, data):
+        if 'isMultiEdge' in data:
+            return data['isMultiEdge']
+        else:
+            return data['position'] in (RIGHT_BOTTOM, RIGHT_TOP)
+            #implement other behavior
+
     def serialize(self):
         return OrderedDict([
             ("id" , self.id),
@@ -61,8 +68,9 @@ class Socket(Serializable):
         )
 
     def deserialize(self, data, hashmap = {}, restoreId = True):
+
         if restoreId : self.id = data['id']
-        self.isMultiEdges = data["isMultiEdge"]
+        self.isMultiEdges = self.determinMultiEdges(data)
         hashmap[data['id']] = self
 
         return True

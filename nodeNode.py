@@ -1,10 +1,12 @@
 from collections import OrderedDict
 from socket import socket
+from tokenize import Expfloat
 
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import Socket, LEFT_TOP, RIGHT_TOP, LEFT_BOTTOM, RIGHT_BOTTOM
+from utils import dumpException
 
 DEBUG = False
 
@@ -80,7 +82,7 @@ class Node(Serializable):
 
         for socket in (self.inputs + self.outputs):
             for edge in socket.edges:
-                if DEBUG : print("Node : DEBUG : from socket ", socket, "edge:", edges)
+                if DEBUG : print("Node : DEBUG : from socket ", socket, "edge:", edge)
                 edge.remove()
         if DEBUG:  print("Node : DEBUG : removing gr Node")
         self.scene.grScene.removeItem(self.grNode)
@@ -88,7 +90,6 @@ class Node(Serializable):
         if DEBUG:  print("Node : DEBUG : removing node from scene list")
         self.scene.removeNode(self)
         if DEBUG:  print("Node : DEBUG : DONE!!")
-
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
@@ -111,7 +112,6 @@ class Node(Serializable):
         )
 
     def deserialize(self, data, hashmap = {}, restoreId = True):
-
         if DEBUG : print("NODE : DEBUG : Deserializing data", data)
 
         if restoreId : self.id = data['id']

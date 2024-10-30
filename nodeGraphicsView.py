@@ -281,10 +281,10 @@ class QDMGraphicsView(QGraphicsView):
                 super().keyPressEvent(event)
 
         #elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
-         #   self.graphicsScene.scene.saveToFile("graph.json.txt")
+         #   self.graphicsScene.scene.saveToFile("graph.json")
 
         #elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
-         #   self.graphicsScene.scene.loadFromFile("graph.json.txt")
+         #   self.graphicsScene.scene.loadFromFile("graph.json")
 
         #elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
          #   self.graphicsScene.scene.sceneHistory.undo()

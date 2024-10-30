@@ -1,4 +1,6 @@
 from idlelib.iomenu import encoding
+from plistlib import InvalidFileException
+
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -7,17 +9,13 @@ import os
 from nodeEdge import Edge, EDGE_TYPE_DIRECT, EDGE_TYPE_BEZIER
 from nodeNode import Node
 from nodeGraphicsView import QDMGraphicsView
-from nodeScene import Scene
+from nodeScene import Scene, InvalidFile
 from nodeSocket import Socket
 
 
 class NodeEditorWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        #load nodestyle from stylesheet
-        self.styleSheetFileName = 'qss/nodestyle.qss'
-        self.loadStyleSheet(self.styleSheetFileName)
 
         self.filename = None
 
@@ -51,14 +49,23 @@ class NodeEditorWidget(QWidget):
 
         return name + ('*' if self.isModified() else '')
 
-    def loadStyleSheet(self, filename):
-        print("loading Style")
-        file = QFile(filename)
-        file.open(QFile.ReadOnly | QFile.Text)
+    def fileLoad(self, fileName):
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            print("test")
 
-        stylesheet = file.readAll()
+            self.scene.loadFromFile(fileName)
+            self.filename = fileName
+            return True
+        except InvalidFile as e:
+            print(e)
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(self, "Error loading %s" % os.path.basename(fileName), str(e))
+            return False
+        finally:
+            QApplication.restoreOverrideCursor()
 
-        QApplication.instance().setStyleSheet(str(stylesheet, encoding='utf-8'))
+        return False
 
     def addNodes(self):
 

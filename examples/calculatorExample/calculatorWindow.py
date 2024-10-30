@@ -1,11 +1,12 @@
-from textwrap import shorten
-
+import os
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 from nodeEditorWindow import NodeEditorWindow
 from utils import dumpException
+from utils import loadStyleSheet
+
 from examples.calculatorExample.calculatorSubWindow import CalculatorSubWindow
 
 class Calculator(NodeEditorWindow):
@@ -14,6 +15,9 @@ class Calculator(NodeEditorWindow):
 
         self.nameCompany = "TLPF"
         self.nameProduct = "Calculator NodeEditor"
+
+        self.stylesheet = "qss/nodestyle.qss"
+        loadStyleSheet(self.stylesheet)
 
         self.mdiArea = QMdiArea()
 
@@ -53,7 +57,6 @@ class Calculator(NodeEditorWindow):
         self.setWindowTitle("Calc Example")
 
         self.show()
-
 
     def createNodesDock(self):
         self.listWidget = QListWidget()
@@ -139,6 +142,27 @@ class Calculator(NodeEditorWindow):
             subWindow.show()
         except Exception as e: dumpException(e)
 
+    def onFileOpen(self):
+        fnames, filter = QFileDialog.getOpenFileNames(self, ' Open graph from file')
+        try:
+            for fname in fnames:
+                if fname:
+                    existing = self.findMdiChild(fname)
+                    if existing:
+                        self.mdiArea.setActiveSubWindow(existing)
+                    else:
+                        #create new Subwindow and open file
+                        nodeEditor = CalculatorSubWindow()
+
+                        if nodeEditor.fileLoad(fname):
+                            self.statusBar().showMessage("File %s loaded" % fname, 5000)
+                            nodeEditor.setTitle()
+                            subWindow = self.mdiArea.addSubWindow(nodeEditor)
+                            subWindow.show()
+                        else:
+                            nodeEditor.close()
+        except Exception as e: dumpException(e)
+
     def createToolBars(self):
         pass
 
@@ -166,6 +190,12 @@ class Calculator(NodeEditorWindow):
         subWindow = self.mdiArea.addSubWindow(nodeEditor)
 
         return subWindow
+
+    def findMdiChild(self, fileName):
+        for window in self.mdiArea.subWindowList():
+            if window.widget().filename == fileName:
+                return window
+        return None
 
     def closeEvent(self, event):
         self.mdiArea.closeAllSubWindows()

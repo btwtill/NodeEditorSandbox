@@ -7,6 +7,8 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
+    app.setStyle('Fusion')
+
     calculatorWindow = Calculator()
 
     sys.exit(app.exec_())
