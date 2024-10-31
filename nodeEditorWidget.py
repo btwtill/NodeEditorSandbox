@@ -50,10 +50,8 @@ class NodeEditorWidget(QWidget):
         return name + ('*' if self.isModified() else '')
 
     def fileLoad(self, fileName):
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            print("test")
-
             self.scene.loadFromFile(fileName)
             self.filename = fileName
             return True
@@ -66,6 +64,14 @@ class NodeEditorWidget(QWidget):
             QApplication.restoreOverrideCursor()
 
         return False
+
+    def fileSave(self, filename=None):
+        if filename is not None: self.filename = filename
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        self.scene.saveToFile(self.filename)
+        QApplication.restoreOverrideCursor()
+
+        return True
 
     def addNodes(self):
 

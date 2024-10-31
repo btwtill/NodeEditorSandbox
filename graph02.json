@@ -6,8 +6,8 @@
         {
             "id": 2586529819408,
             "title": "New Amazing Node",
-            "pos_x": 601.5,
-            "pos_y": 30.0,
+            "pos_x": 293.25,
+            "pos_y": -172.0,
             "inputs": [
                 {
                     "id": 2586529870928,
@@ -45,8 +45,8 @@
         {
             "id": 2586529873680,
             "title": "Second node",
-            "pos_x": -143.25,
-            "pos_y": -229.0,
+            "pos_x": -188.25,
+            "pos_y": -182.75,
             "inputs": [
                 {
                     "id": 2586529891024,
@@ -87,65 +87,26 @@
                 }
             ],
             "content": {}
-        },
-        {
-            "id": 1714028244736,
-            "title": "New Amazing Node",
-            "pos_x": 287.625,
-            "pos_y": -311.0,
-            "inputs": [
-                {
-                    "id": 1714028244832,
-                    "index": 0,
-                    "isMultiEdge": false,
-                    "position": 1,
-                    "socketType": 1
-                },
-                {
-                    "id": 1714028244880,
-                    "index": 1,
-                    "isMultiEdge": false,
-                    "position": 1,
-                    "socketType": 1
-                },
-                {
-                    "id": 1714028243344,
-                    "index": 2,
-                    "isMultiEdge": false,
-                    "position": 1,
-                    "socketType": 1
-                }
-            ],
-            "outputs": [
-                {
-                    "id": 1714028243392,
-                    "index": 0,
-                    "isMultiEdge": true,
-                    "position": 3,
-                    "socketType": 1
-                }
-            ],
-            "content": {}
         }
     ],
     "edges": [
         {
-            "id": 1655082779712,
-            "edgeType": 2,
-            "start": 2586529893136,
-            "end": 1714028244880
-        },
-        {
-            "id": 1655097898480,
+            "id": 2586529900368,
             "edgeType": 2,
             "start": 2586529892432,
             "end": 2586529870928
         },
         {
-            "id": 1655097897952,
+            "id": 2586529901072,
             "edgeType": 2,
-            "start": 1714028243392,
+            "start": 2586529893840,
             "end": 2586529871568
+        },
+        {
+            "id": 2696311660400,
+            "edgeType": 2,
+            "start": 2586529893136,
+            "end": 2586529872272
         }
     ]
 }

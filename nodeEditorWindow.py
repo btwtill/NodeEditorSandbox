@@ -107,7 +107,7 @@ class NodeEditorWindow(QMainWindow):
         if self.maybeSave():
             if DEBUG : print("Window : DEBUG : On File new!")
             self.getCurrentNodeEditorWidget().scene.clearScene()
-            self.filename = None
+            self.getCurrentNodeEditorWidget().filename = None
             self.setTitle()
 
     def onFileOpen(self):
@@ -117,15 +117,14 @@ class NodeEditorWindow(QMainWindow):
             if fname == '':
                 return
             if os.path.isfile(fname):
-                self.getCurrentNodeEditorWidget().scene.loadFromFile(fname)
-                self.filename = fname
-                self.setTitle()
+                self.getCurrentNodeEditorWidget().fileLoad(fname)
 
     def onFileSave(self):
         if DEBUG : print("Window : DEBUG : Save")
-        if self.filename == None: return self.onFileSaveAs()
-        self.getCurrentNodeEditorWidget().scene.saveToFile(self.filename)
-        self.statusBar().showMessage("Successfully saved %s" % self.filename)
+        if self.getCurrentNodeEditorWidget().filename is None: return self.onFileSaveAs()
+        self.getCurrentNodeEditorWidget().fileSave()
+        self.statusBar().showMessage("Successfully saved %s" % self.getCurrentNodeEditorWidget().filename)
+
         return True
 
     def onFileSaveAs(self):
@@ -136,8 +135,8 @@ class NodeEditorWindow(QMainWindow):
         if fname == '':
             return False
 
-        self.filename = fname
-        self.onFileSave()
+        self.getCurrentNodeEditorWidget().fileSave(fname)
+        self.statusBar().showMessage("Successfully saved as %s" % self.getCurrentNodeEditorWidget().filename)
         return True
 
     def onEditUndo(self):

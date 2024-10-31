@@ -1,4 +1,6 @@
 import os
+from xml.sax.saxutils import escape
+
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -71,7 +73,18 @@ class Calculator(NodeEditorWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.items)
 
     def updateMenus(self):
-        pass
+        activeMdiChild = self.activeMdiChild()
+        hasMdiChild = (activeMdiChild is not None)
+
+        self.actionSave.setEnabled(hasMdiChild)
+        self.actionSaveAs.setEnabled(hasMdiChild)
+        self.actionClose.setEnabled(hasMdiChild)
+        self.actionCloseAll.setEnabled(hasMdiChild)
+        self.actionTile.setEnabled(hasMdiChild)
+        self.actionCascade.setEnabled(hasMdiChild)
+        self.actionNext.setEnabled(hasMdiChild)
+        self.actionPreviouse.setEnabled(hasMdiChild)
+        self.actionSeparator.setSeparator(hasMdiChild)
 
     def createMenus(self):
         super().createMenus()
@@ -83,23 +96,23 @@ class Calculator(NodeEditorWindow):
         self.menuBar().addSeparator()
 
         self.helpMenu = self.menuBar().addMenu("&Help")
-        self.helpMenu.addAction(self.aboutAction)
+        self.helpMenu.addAction(self.actionAbout)
 
     def updateWindowMenu(self):
         self.windowMenu.clear()
-        self.windowMenu.addAction(self.closeAction)
-        self.windowMenu.addAction(self.closeAllAction)
+        self.windowMenu.addAction(self.actionClose)
+        self.windowMenu.addAction(self.actionCloseAll)
         self.windowMenu.addSeparator()
-        self.windowMenu.addAction(self.tileAction)
-        self.windowMenu.addAction(self.cascadeAction)
+        self.windowMenu.addAction(self.actionTile)
+        self.windowMenu.addAction(self.actionCascade)
         self.windowMenu.addSeparator()
-        self.windowMenu.addAction(self.nextAction)
-        self.windowMenu.addAction(self.previouseAction)
-        self.windowMenu.addAction(self.nextAction)
-        self.windowMenu.addAction(self.separatorAction)
+        self.windowMenu.addAction(self.actionNext)
+        self.windowMenu.addAction(self.actionPreviouse)
+        self.windowMenu.addAction(self.actionNext)
+        self.windowMenu.addAction(self.actionSeparator)
 
         windows = self.mdiArea.subWindowList()
-        self.separatorAction.setVisible(len(windows) !=0 )
+        self.actionSeparator.setVisible(len(windows) !=0 )
 
         for i, window in enumerate(windows):
             child = window.widget()
@@ -116,25 +129,54 @@ class Calculator(NodeEditorWindow):
     def createActions(self):
         super().createActions()
 
-        self.closeAction = QAction("Cl&ose", self,
+        self.actionClose = QAction("Cl&ose", self,
                                    statusTip="Close the active window", triggered=self.mdiArea.closeActiveSubWindow)
-        self.closeAllAction = QAction("Close &All", self,
+        self.actionCloseAll = QAction("Close &All", self,
                                    statusTip="Close all windows", triggered=self.mdiArea.closeActiveSubWindow)
-        self.tileAction = QAction("&Tile", self,
+        self.actionTile = QAction("&Tile", self,
                                   statusTip = "Tile the windows", triggered = self.mdiArea.tileSubWindows)
-        self.cascadeAction = QAction("&Cascade", self,
+        self.actionCascade = QAction("&Cascade", self,
                                      statusTip = "Cascade the Windows", triggered = self.mdiArea.cascadeSubWindows)
-        self.nextAction = QAction("Ne&xt", self,
+        self.actionNext = QAction("Ne&xt", self,
                                   shortcut=QKeySequence.NextChild, statusTip="Move the focus to the next Window",
                                   triggered=self.mdiArea.activateNextSubWindow)
-        self.previouseAction = QAction("Pre&vious", self,
+        self.actionPreviouse = QAction("Pre&vious", self,
                                        shortcut=QKeySequence.PreviousChild,
                                        statusTip="Move the focus to the previouse Window",
                                        triggered=self.mdiArea.activatePreviousSubWindow)
-        self.separatorAction = QAction(self)
-        self.separatorAction.setSeparator(True)
-        self.aboutAction = QAction("&About", self,
+        self.actionSeparator = QAction(self)
+        self.actionSeparator.setSeparator(True)
+        self.actionAbout = QAction("&About", self,
                                    statusTip="Shot the applications about box", triggered=self.about)
+
+    def onFileSave(self):
+        print("Reached Save")
+        try:
+            currentNodeEditor = self.activeMdiChild()
+
+            if currentNodeEditor:
+                if not currentNodeEditor.isFileNameSet():
+                    return self.onFileSaveAs()
+                else:
+                    currentNodeEditor.fileSave()
+                    self.statusBar().showMessage('Succesfully saved %s' % currentNodeEditor.filename, 5000)
+                    currentNodeEditor.setTitle()
+                    return True
+
+        except Exception as e: dumpException(e)
+
+    def onFileSaveAs(self):
+        print("Reached Save As")
+        currentNodeEditor = self.activeMdiChild()
+
+        if currentNodeEditor:
+            fname, filter = QFileDialog.getSaveFileName(self, "Save graph file")
+            if fname == '': return False
+
+            currentNodeEditor.fileSave(fname)
+            currentNodeEditor.setTitle()
+            self.statusBar().showMessage("Successfully saved as %s" % fname, 5000)
+            return True
 
     def onFileNew(self):
         try:
@@ -182,7 +224,7 @@ class Calculator(NodeEditorWindow):
         #We are Returning nodeEditor Widget Here
         activeSubWindow = self.mdiArea.activeSubWindow()
         if activeSubWindow:
-            return activeSubWindow
+            return activeSubWindow.widget()
         return None
 
     def createMdiChild(self):
