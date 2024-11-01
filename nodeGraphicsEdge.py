@@ -65,6 +65,10 @@ class QDMGraphicsEdge(QGraphicsPathItem):
             self._lastSelectedState = self.isSelected()
             self.onSelected()
 
+    def calculatePath(self):
+        #Method to draw the path from a to b
+        raise NotImplemented("This method has to to be overriden in a child class")
+
     def onSelected(self):
         self.edge.scene.grScene.itemsSelected.emit()
 
@@ -80,9 +84,6 @@ class QDMGraphicsEdge(QGraphicsPathItem):
     def setDestination(self, x,y):
         self.posDestination = [x, y]
 
-    def calculatePath(self):
-        #Method to draw the path from a to b
-        raise NotImplemented("This method has to to be overriden in a child class")
 
 class QDMGraphicsEdgeDirect(QDMGraphicsEdge):
     def calculatePath(self):

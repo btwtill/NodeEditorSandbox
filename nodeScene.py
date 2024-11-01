@@ -56,16 +56,26 @@ class Scene(Serializable):
         self.grScene.setGrScene(self.sceneWidth, self.sceneHeight)
 
     def onItemSelected(self):
+
         if DEBUG : print("SCENE:: -onItemSelected")
+
         currentSelectedItems = self.getSelectedItems()
+
+        if DEBUG:
+            print("NODESCENE:: -onItemSelected:: Current Selected Items =", currentSelectedItems)
+            print("NODESCENE:: -onItemSelected:: Last Selected Items =", self._lastSelectedItems)
+
         if currentSelectedItems != self._lastSelectedItems:
             self._lastSelectedItems = currentSelectedItems
             self.sceneHistory.storeHistory("SelectionChanged")
             for callback in self._itemsSelectedListeners: callback()
 
     def onItemDeselected(self):
+
         if DEBUG : print("SCENE:: -onItemDeselected")
+
         self.resetLastSelectedStates()
+
         if self._lastSelectedItems != []:
             self._lastSelectedItems = []
             self.sceneHistory.storeHistory("DeselectedEverything")
@@ -75,7 +85,7 @@ class Scene(Serializable):
         return self.hasBeenModified
 
     def getSelectedItems(self):
-        self.grScene.selectedItems()
+        return self.grScene.selectedItems()
 
     def addHasBeenModifiedListener(self, callback):
         self._hasBeenModifiedListeners.append(callback)

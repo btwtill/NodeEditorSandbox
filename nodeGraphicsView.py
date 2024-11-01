@@ -275,6 +275,13 @@ class QDMGraphicsView(QGraphicsView):
 
             currentSelectedItems = self.graphicsScene.selectedItems()
 
+            if DEBUG:
+                print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: lastSelectedItems = ",
+                      self.graphicsScene.scene._lastSelectedItems)
+                print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: Current SelectedItems = ",
+                      currentSelectedItems)
+
+
             if currentSelectedItems != self.graphicsScene.scene._lastSelectedItems:
                 if currentSelectedItems == []:
                     self.graphicsScene.itemsDeselected.emit()
@@ -282,6 +289,12 @@ class QDMGraphicsView(QGraphicsView):
                     self.graphicsScene.itemsSelected.emit()
 
                 self.graphicsScene.scene._lastSelectedItems = currentSelectedItems
+
+                if DEBUG:
+                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: lastSelectedItems = ",
+                          self.graphicsScene.scene._lastSelectedItems)
+                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: Current SelectedItems = ",
+                          currentSelectedItems)
 
             return
 

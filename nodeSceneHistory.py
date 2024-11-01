@@ -3,7 +3,7 @@ from errno import EBUSY
 from nodeGraphicsEdge import QDMGraphicsEdge
 from utils import dumpException
 
-DEBUG = True
+DEBUG = False
 
 class SceneHistory():
     def __init__(self, scene):
