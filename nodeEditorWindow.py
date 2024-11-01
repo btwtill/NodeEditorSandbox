@@ -106,9 +106,8 @@ class NodeEditorWindow(QMainWindow):
     def onFileNew(self):
         if self.maybeSave():
             if DEBUG : print("Window : DEBUG : On File new!")
-            self.getCurrentNodeEditorWidget().scene.clearScene()
-            self.getCurrentNodeEditorWidget().filename = None
-            self.setTitle()
+            self.getCurrentNodeEditorWidget().fileNew()
+
 
     def onFileOpen(self):
         if self.maybeSave():

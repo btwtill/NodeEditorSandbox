@@ -9,9 +9,8 @@ def dumpException(e):
     traceback.print_tb(e.__traceback__)
 
 def loadStyleSheet(filename):
-    print("loading Style")
 
-    print(filename)
+    print("loading Style from Path: ", filename)
 
     file = QFile(filename)
     file.open(QFile.ReadOnly | QFile.Text)

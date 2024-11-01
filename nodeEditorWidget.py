@@ -36,8 +36,6 @@ class NodeEditorWidget(QWidget):
         self.view = QDMGraphicsView(self.scene.grScene, self)
         self.layout.addWidget(self.view)
 
-        self.addNodes()
-
     def isFileNameSet(self):
         return self.filename is not None
 
@@ -54,11 +52,15 @@ class NodeEditorWidget(QWidget):
         try:
             self.scene.loadFromFile(fileName)
             self.filename = fileName
+            self.scene.sceneHistory.clear()
+            self.scene.sceneHistory.storeInitialHistoryStamp()
+
             return True
         except InvalidFile as e:
             print(e)
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, "Error loading %s" % os.path.basename(fileName), str(e))
+
             return False
         finally:
             QApplication.restoreOverrideCursor()
@@ -73,6 +75,24 @@ class NodeEditorWidget(QWidget):
 
         return True
 
+    def fileNew(self):
+        self.scene.clearScene()
+        self.filename = None
+        self.scene.sceneHistory.clear()
+        self.scene.sceneHistory.storeInitialHistoryStamp()
+
+    def getSelectedItems(self):
+        return self.scene.getSelectedItems()
+
+    def hasSelectedItems(self):
+        return self.getSelectedItems() != []
+
+    def canUndo(self):
+        return self.scene.sceneHistory.canUndo()
+
+    def canRedo(self):
+        return self.scene.sceneHistory.canRedo()
+
     def addNodes(self):
 
         # add Nodes
@@ -85,3 +105,5 @@ class NodeEditorWidget(QWidget):
         edge1 = Edge(self.scene, node2.outputs[0], node.inputs[0], edgeType=EDGE_TYPE_BEZIER)
         edge2 = Edge(self.scene, node2.outputs[2], node.inputs[1], edgeType=EDGE_TYPE_BEZIER)
         edge3 = Edge(self.scene, node.outputs[0], node3.inputs[1], edgeType=EDGE_TYPE_BEZIER)
+
+        self.scene.sceneHistory.storeInitialHistoryStamp()

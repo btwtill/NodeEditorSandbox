@@ -14,8 +14,6 @@ DEBUG = False
 
 class InvalidFile(Exception): pass
 
-
-
 class Scene(Serializable):
     def __init__(self):
         super().__init__()
@@ -47,6 +45,12 @@ class Scene(Serializable):
                 callback()
 
         self._hasBeenModified = value
+
+    def isModified(self):
+        return self.hasBeenModified
+
+    def getSelectedItems(self):
+        self.grScene.selectedItems()
 
     def addHasBeenModifiedListener(self, callback):
         self._hasBeenModifiedListeners.append(callback)

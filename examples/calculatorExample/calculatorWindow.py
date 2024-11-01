@@ -81,6 +81,8 @@ class Calculator(NodeEditorWindow):
         self.helpMenu = self.menuBar().addMenu("&Help")
         self.helpMenu.addAction(self.actionAbout)
 
+        self.editMenu.aboutToShow.connect(self.updateEditMenu)
+
     def createActions(self):
         super().createActions()
 
@@ -124,6 +126,8 @@ class Calculator(NodeEditorWindow):
         self.actionPreviouse.setEnabled(hasMdiChild)
         self.actionSeparator.setSeparator(hasMdiChild)
 
+        self.updateEditMenu()
+
     def updateWindowMenu(self):
         self.windowMenu.clear()
         self.windowMenu.addAction(self.actionClose)
@@ -151,6 +155,19 @@ class Calculator(NodeEditorWindow):
             action.setChecked(child is self.getCurrentNodeEditorWidget())
             action.triggered.connect(self.windowMapper.map)
             self.windowMapper.setMapping(action, window)
+
+    def updateEditMenu(self):
+        print("Update Edit menu")
+        activeMdiChild = self.getCurrentNodeEditorWidget()
+        hasMdiChild = (activeMdiChild is not None)
+
+        self.actionPaste.setEnabled(hasMdiChild)
+        self.actionCut.setEnabled(hasMdiChild and activeMdiChild.hasSelectedItems())
+        self.actionCopy.setEnabled(hasMdiChild and activeMdiChild.hasSelectedItems())
+        self.actionDelete.setEnabled(hasMdiChild and activeMdiChild.hasSelectedItems())
+
+        self.actionUndo.setEnabled(hasMdiChild and activeMdiChild.canUndo())
+        self.actionRedo.setEnabled(hasMdiChild and activeMdiChild.canRedo())
 
     def getCurrentNodeEditorWidget(self):
         # We are Returning nodeEditor Widget Here
