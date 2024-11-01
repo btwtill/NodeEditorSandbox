@@ -15,7 +15,7 @@ MODE_EDGE_CUT = 3
 EDGE_START_DRAG_THRESHOLD = 10
 
 #Debugging Mode
-DEBUG = True
+DEBUG = False
 
 class QDMGraphicsView(QGraphicsView):
 
@@ -43,7 +43,6 @@ class QDMGraphicsView(QGraphicsView):
         #Empy Object that will be drawn on ctrl left Mouse button
         self.cutline = QDMCutLine()
         self.graphicsScene.addItem(self.cutline)
-
 
 
     def initUI(self):
@@ -101,7 +100,6 @@ class QDMGraphicsView(QGraphicsView):
 
         super().mousePressEvent(fakeEvent)
 
-
     def middleMouseButtonRelease(self, event):
 
         #Fake Left Mouse release
@@ -138,7 +136,6 @@ class QDMGraphicsView(QGraphicsView):
 
         #when the type is of socket start dragging an edge
         if type(item) == QDMGraphicsSocket:
-
             #only if not already in drag mode or cut mode
             if self.mode == MODE_NOOP:
                 self.mode = MODE_EDGEDRAG
@@ -151,7 +148,7 @@ class QDMGraphicsView(QGraphicsView):
             if res: return
 
         # if the press is to the void check for ctrl key  (edge cutting )
-        if item == None:
+        if item is None:
             if event.modifiers() & Qt.Modifier.CTRL:
                 self.mode = MODE_EDGE_CUT
 
@@ -204,8 +201,8 @@ class QDMGraphicsView(QGraphicsView):
             return
 
         if self.rubberBandDraggingRectangle:
-            self.graphicsScene.scene.sceneHistory.storeHistory("Selection Changed")
             self.rubberBandDraggingRectangle = False
+            self.graphicsScene.scene.sceneHistory.storeHistory("Selection Changed")
 
         super().mouseReleaseEvent(event)
 
@@ -331,7 +328,6 @@ class QDMGraphicsView(QGraphicsView):
         self.dragEdge = Edge(self.graphicsScene.scene, item.socket, None, EDGE_TYPE_BEZIER)
 
         if DEBUG : print("View : edgeDragStart : dragEdge", self.dragEdge)
-
 
     def edgeDragEnd(self, item):
 

@@ -13,6 +13,20 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         super().__init__(parent)
 
         self.edge = edge
+
+        self._lastSelectedState = False
+
+        self.posSource = [0, 0]
+        self.posDestination = [200, 100]
+
+        self.initGraphicElements()
+        self.initUI()
+
+    def initUI(self):
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setZValue(-1)
+
+    def initGraphicElements(self):
         self.color = QColor("#001000")
         self.colorSelected = QColor("#FFFF7700")
 
@@ -26,12 +40,13 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.penDragged.setWidthF(2.0)
         self.penDragged.setStyle(Qt.PenStyle.DashLine)
 
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
 
-        self.setZValue(-1)
-
-        self.posSource = [0, 0]
-        self.posDestination = [200, 100]
+        if self._lastSelectedState != self.isSelected():
+            self.edge.scene.resetLastSelectedStates()
+            self._lastSelectedState = self.isSelected()
+            self.onSelected()
 
     def setSource(self, x, y):
         self.posSource = [x,y]
@@ -62,12 +77,13 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         path = self.calculatePath()
         return cutpath.intersects(path)
 
-
+    def onSelected(self):
+        print("grEdge onSelected")
+        self.edge.scene.grScene.itemsSelected.emit()
 
     def calculatePath(self):
         #Method to draw the path from a to b
         raise NotImplemented("This method has to to be overriden in a child class")
-
 
 class QDMGraphicsEdgeDirect(QDMGraphicsEdge):
     def calculatePath(self):

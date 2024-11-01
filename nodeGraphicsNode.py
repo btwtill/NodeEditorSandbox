@@ -9,33 +9,13 @@ class QDMGraphicsNode(QGraphicsItem):
         self.node = node
         self.content = self.node.content
 
-        self.titleColor = Qt.GlobalColor.white
-        self.titleFont = QFont("Helvetica", 10)
+        self._wasMoved = False
+        self._lastSelectedState = False
 
-
-        self.width = 180
-        self.height = 220
-        self.edgeSize = 10
-        self.titleHeight = 24
-        self.padding = 20.0
-
-
-        self.defaultPen = QPen(QColor("#7F000000"))
-        self.selectedPen = QPen(QColor("#FFFFA637"))
-
-        self.brushTitle = QBrush(QColor("#FF313131"))
-        self.brushBackground = QBrush(QColor("#E3212121"))
-
-
-        self.initTitle()
-        self.title = self.node._title
-
-        self.initSockets()
-
-        self.initContent()
-
+        self.initSizes()
+        self.initGraphicElements()
         self.initUI()
-        self.wasMoved = False
+
 
     @property
     def title(self): return self._title
@@ -44,6 +24,16 @@ class QDMGraphicsNode(QGraphicsItem):
         self._title = value
         self.titleItem.setPlainText(self._title)
 
+    def initUI(self):
+        self.initTitle()
+        self.title = self.node.title
+
+        self.initSockets()
+        self.initContent()
+
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
 
@@ -51,19 +41,40 @@ class QDMGraphicsNode(QGraphicsItem):
             if node.grNode.isSelected():
                 node.updateConnectedEdges()
 
-        self.wasMoved = True
+        self._wasMoved = True
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
-        if self.wasMoved:
-            self.wasMoved = False
-
+        if self._wasMoved:
+            self._wasMoved = False
             self.node.scene.sceneHistory.storeHistory("Moved Node", setModified = True)
 
-    def initUI(self):
-        self.setFlag(QGraphicsItem.ItemIsSelectable)
-        self.setFlag(QGraphicsItem.ItemIsMovable)
+        if self._lastSelectedState != self.isSelected():
+            self.node.scene.resetLastSelectedStates()
+            self._lastSelectedState = self.isSelected()
+            self.onSelected()
+
+    def onSelected(self):
+        print("grNode onSelected")
+        self.node.scene.grScene.itemsSelected.emit()
+
+    def initSizes(self):
+        self.width = 180
+        self.height = 220
+        self.edgeSize = 10
+        self.titleHeight = 24
+        self.padding = 20.0
+
+    def initGraphicElements(self):
+        self.titleColor = Qt.GlobalColor.white
+        self.titleFont = QFont("Helvetica", 10)
+
+        self.defaultPen = QPen(QColor("#7F000000"))
+        self.selectedPen = QPen(QColor("#FFFFA637"))
+
+        self.brushTitle = QBrush(QColor("#FF313131"))
+        self.brushBackground = QBrush(QColor("#E3212121"))
 
     def initTitle(self):
         self.titleItem = QGraphicsTextItem(self)

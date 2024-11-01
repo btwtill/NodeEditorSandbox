@@ -1,10 +1,13 @@
-from PyQt5.QtCore import QLine
+from PyQt5.QtCore import QLine, pyqtSignal
 import math
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView
 
 
 class QDMGraphicsScene(QGraphicsScene):
+    itemsSelected = pyqtSignal()
+    itemsDeselected = pyqtSignal()
+
     def __init__(self, scene, parent = None):
         super().__init__(parent)
 

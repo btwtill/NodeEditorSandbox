@@ -25,6 +25,8 @@ class Scene(Serializable):
 
         self._hasBeenModified = False
         self._hasBeenModifiedListeners = []
+        self._itemsSelectedListeners = []
+        self._itemDeselectedListeners = []
 
         self.sceneWidth = 64000
         self.sceneHeight = 64000
@@ -32,6 +34,9 @@ class Scene(Serializable):
         self.initUI()
 
         self.clipboard = SceneClipboard(self)
+
+        self.grScene.itemsSelected.connect(self.onItemSelected)
+        self.grScene.itemsDeselected.connect(self.onItemSelected)
 
     @property
     def hasBeenModified(self): return self._hasBeenModified
@@ -46,6 +51,16 @@ class Scene(Serializable):
 
         self._hasBeenModified = value
 
+    def initUI(self):
+        self.grScene = QDMGraphicsScene(self)
+        self.grScene.setGrScene(self.sceneWidth, self.sceneHeight)
+
+    def onItemSelected(self):
+        print("SCENE:: -onItemSelected")
+
+    def onItemDeselected(self):
+        print("SCENE:: -onItemDeselected")
+
     def isModified(self):
         return self.hasBeenModified
 
@@ -55,9 +70,17 @@ class Scene(Serializable):
     def addHasBeenModifiedListener(self, callback):
         self._hasBeenModifiedListeners.append(callback)
 
-    def initUI(self):
-        self.grScene = QDMGraphicsScene(self)
-        self.grScene.setGrScene(self.sceneWidth, self.sceneHeight)
+    def addItemSelectedListener(self, callback):
+        self._itemSelectedListeners.append(callback)
+
+    def addItemDeselectedListener(self, callback):
+        self._itemDeselectedListeners.append(callback)
+
+    def resetLastSelectedStates(self):
+        for node in self.nodes:
+            node.grNode._lastSelectedState = False
+        for edge in self.edges:
+            edge.grEdge._lastSelectedState = False
 
     def addNode(self, node):
         self.nodes.append(node)
