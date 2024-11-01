@@ -27,6 +27,7 @@ class Scene(Serializable):
         self._hasBeenModifiedListeners = []
         self._itemsSelectedListeners = []
         self._itemDeselectedListeners = []
+        self._lastSelectedItems = []
 
         self.sceneWidth = 64000
         self.sceneHeight = 64000
@@ -36,7 +37,7 @@ class Scene(Serializable):
         self.clipboard = SceneClipboard(self)
 
         self.grScene.itemsSelected.connect(self.onItemSelected)
-        self.grScene.itemsDeselected.connect(self.onItemSelected)
+        self.grScene.itemsDeselected.connect(self.onItemDeselected)
 
     @property
     def hasBeenModified(self): return self._hasBeenModified
@@ -46,8 +47,7 @@ class Scene(Serializable):
         if not self._hasBeenModified and value:
             self._hasBeenModified = value
 
-            for callback in self._hasBeenModifiedListeners:
-                callback()
+            for callback in self._hasBeenModifiedListeners: callback()
 
         self._hasBeenModified = value
 
@@ -56,10 +56,20 @@ class Scene(Serializable):
         self.grScene.setGrScene(self.sceneWidth, self.sceneHeight)
 
     def onItemSelected(self):
-        print("SCENE:: -onItemSelected")
+        if DEBUG : print("SCENE:: -onItemSelected")
+        currentSelectedItems = self.getSelectedItems()
+        if currentSelectedItems != self._lastSelectedItems:
+            self._lastSelectedItems = currentSelectedItems
+            self.sceneHistory.storeHistory("SelectionChanged")
+            for callback in self._itemsSelectedListeners: callback()
 
     def onItemDeselected(self):
-        print("SCENE:: -onItemDeselected")
+        if DEBUG : print("SCENE:: -onItemDeselected")
+        self.resetLastSelectedStates()
+        if self._lastSelectedItems != []:
+            self._lastSelectedItems = []
+            self.sceneHistory.storeHistory("DeselectedEverything")
+            for callback in self._itemDeselectedListeners: callback()
 
     def isModified(self):
         return self.hasBeenModified
@@ -71,7 +81,7 @@ class Scene(Serializable):
         self._hasBeenModifiedListeners.append(callback)
 
     def addItemSelectedListener(self, callback):
-        self._itemSelectedListeners.append(callback)
+        self._itemsSelectedListeners.append(callback)
 
     def addItemDeselectedListener(self, callback):
         self._itemDeselectedListeners.append(callback)

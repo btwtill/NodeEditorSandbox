@@ -50,13 +50,20 @@ class QDMGraphicsNode(QGraphicsItem):
             self._wasMoved = False
             self.node.scene.sceneHistory.storeHistory("Moved Node", setModified = True)
 
-        if self._lastSelectedState != self.isSelected():
+            self.node.scene.resetLastSelectedStates()
+            self._lastSelectedState = True
+
+            self.node.scene._lastSelectedItems = self.node.scene.getSelectedItems()
+
+            return
+
+        if (self._lastSelectedState != self.isSelected() or
+                self.node.scene._lastSelectedItems != self.node.scene.getSelectedItems()):
             self.node.scene.resetLastSelectedStates()
             self._lastSelectedState = self.isSelected()
             self.onSelected()
 
     def onSelected(self):
-        print("grNode onSelected")
         self.node.scene.grScene.itemsSelected.emit()
 
     def initSizes(self):

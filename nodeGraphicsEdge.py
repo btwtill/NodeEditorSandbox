@@ -40,20 +40,6 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.penDragged.setWidthF(2.0)
         self.penDragged.setStyle(Qt.PenStyle.DashLine)
 
-    def mouseReleaseEvent(self, event):
-        super().mouseReleaseEvent(event)
-
-        if self._lastSelectedState != self.isSelected():
-            self.edge.scene.resetLastSelectedStates()
-            self._lastSelectedState = self.isSelected()
-            self.onSelected()
-
-    def setSource(self, x, y):
-        self.posSource = [x,y]
-
-    def setDestination(self, x,y):
-        self.posDestination = [x, y]
-
     def boundingRect(self):
         return self.shape().boundingRect()
 
@@ -71,15 +57,28 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.path())
 
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+
+        if self._lastSelectedState != self.isSelected():
+            self.edge.scene.resetLastSelectedStates()
+            self._lastSelectedState = self.isSelected()
+            self.onSelected()
+
+    def onSelected(self):
+        self.edge.scene.grScene.itemsSelected.emit()
+
     def intersectsWith(self, p1, p2):
         cutpath = QPainterPath(p1)
         cutpath.lineTo(p2)
         path = self.calculatePath()
         return cutpath.intersects(path)
 
-    def onSelected(self):
-        print("grEdge onSelected")
-        self.edge.scene.grScene.itemsSelected.emit()
+    def setSource(self, x, y):
+        self.posSource = [x,y]
+
+    def setDestination(self, x,y):
+        self.posDestination = [x, y]
 
     def calculatePath(self):
         #Method to draw the path from a to b

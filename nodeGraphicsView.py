@@ -44,7 +44,6 @@ class QDMGraphicsView(QGraphicsView):
         self.cutline = QDMCutLine()
         self.graphicsScene.addItem(self.cutline)
 
-
     def initUI(self):
         #Set rendering Attributes
         self.setRenderHints(QPainter.Antialiasing |
@@ -85,6 +84,76 @@ class QDMGraphicsView(QGraphicsView):
             self.rightMouseButtonReleaseEvent(event)
         else:
             super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+
+        if self.mode == MODE_EDGEDRAG:
+            pos = self.mapToScene(event.pos())
+            self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
+            self.dragEdge.grEdge.update()
+
+        if self.mode == MODE_EDGE_CUT:
+            pos = self.mapToScene(event.pos())
+            self.cutline.linePoints.append(pos)
+            self.cutline.update()
+
+        self.lastSceneMousePosition = self.mapToScene(event.pos())
+
+        self.scenePosChanged.emit(
+            int(self.lastSceneMousePosition.x()),
+            int(self.lastSceneMousePosition.y())
+        )
+
+        super().mouseMoveEvent(event)
+
+    def wheelEvent(self, event):
+        zoomOutFactor = 1 / self.zoomInFactor
+
+        if event.angleDelta().y() > 0:
+            zoomFactor = self.zoomInFactor
+            self.zoom += self.zoomStep
+        else:
+            zoomFactor = zoomOutFactor
+            self.zoom -= self.zoomStep
+
+        clamped = False
+        if self.zoom < self.zoomRange[0]: self.zoom, clamped = self.zoomRange[0], True
+        if self.zoom > self.zoomRange[1]: self.zoom, clamped = self.zoomRange[1], True
+
+        if not clamped or self.zoomClamp is False:
+            self.scale(zoomFactor, zoomFactor)
+
+    def keyPressEvent(self, event):
+
+        if event.key() == Qt.Key.Key_Backspace:
+            if not self.editingFlag:
+                self.deleteSelected()
+            else:
+                super().keyPressEvent(event)
+
+        #elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
+         #   self.graphicsScene.scene.saveToFile("graph.json")
+
+        #elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
+         #   self.graphicsScene.scene.loadFromFile("graph.json")
+
+        #elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
+         #   self.graphicsScene.scene.sceneHistory.undo()
+
+        #elif self.isZAndCtrlAndAltPressed(event):
+         #   self.graphicsScene.scene.sceneHistory.redo()
+
+        #elif event.key() == Qt.Key.Key_H:
+
+         #   print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
+          #         " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
+           # ix = 0
+            #for item in self.graphicsScene.scene.sceneHistory.historyStack:
+             #   print ("View : DEBUG : History: #", ix, "--", item['desc'], self.graphicsScene.scene.sceneHistory.historyStack)
+              #  ix += 1
+
+        else:
+            super().keyPressEvent(event)
 
     def middleMouseButtonPress(self, event):
 
@@ -168,12 +237,13 @@ class QDMGraphicsView(QGraphicsView):
 
     def leftMouseButtonReleaseEvent(self, event):
 
+
+
         # retrieve and store the item that was clicked on in the canvas
         item = self.getItemAtClick(event)
 
         #check if the clicked item was of type node, edge or none
         if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
-
             #activate the ctrl key behavior if the shift key is pressed
             if event.modifiers() & Qt.Modifier.SHIFT:
 
@@ -182,8 +252,8 @@ class QDMGraphicsView(QGraphicsView):
                                         Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
                                         event.modifiers() | Qt.Modifier.CTRL)
                 super().mouseReleaseEvent(fakeEvent)
-
                 return
+
         # if there is an edge beeing dragged
         if self.mode == MODE_EDGEDRAG:
 
@@ -202,7 +272,21 @@ class QDMGraphicsView(QGraphicsView):
 
         if self.rubberBandDraggingRectangle:
             self.rubberBandDraggingRectangle = False
-            self.graphicsScene.scene.sceneHistory.storeHistory("Selection Changed")
+
+            currentSelectedItems = self.graphicsScene.selectedItems()
+
+            if currentSelectedItems != self.graphicsScene.scene._lastSelectedItems:
+                if currentSelectedItems == []:
+                    self.graphicsScene.itemsDeselected.emit()
+                else:
+                    self.graphicsScene.itemsSelected.emit()
+
+                self.graphicsScene.scene._lastSelectedItems = currentSelectedItems
+
+            return
+
+        if item is None:
+            self.graphicsScene.itemsDeselected.emit()
 
         super().mouseReleaseEvent(event)
 
@@ -230,76 +314,6 @@ class QDMGraphicsView(QGraphicsView):
 
     def rightMouseButtonReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-
-    def mouseMoveEvent(self, event):
-
-        if self.mode == MODE_EDGEDRAG:
-            pos = self.mapToScene(event.pos())
-            self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
-            self.dragEdge.grEdge.update()
-
-        if self.mode == MODE_EDGE_CUT:
-            pos = self.mapToScene(event.pos())
-            self.cutline.linePoints.append(pos)
-            self.cutline.update()
-
-        self.lastSceneMousePosition = self.mapToScene(event.pos())
-
-        self.scenePosChanged.emit(
-            int(self.lastSceneMousePosition.x()),
-            int(self.lastSceneMousePosition.y())
-        )
-
-        super().mouseMoveEvent(event)
-
-    def wheelEvent(self, event):
-        zoomOutFactor = 1 / self.zoomInFactor
-
-        if event.angleDelta().y() > 0:
-            zoomFactor = self.zoomInFactor
-            self.zoom += self.zoomStep
-        else:
-            zoomFactor = zoomOutFactor
-            self.zoom -= self.zoomStep
-
-        clamped = False
-        if self.zoom < self.zoomRange[0]: self.zoom, clamped = self.zoomRange[0], True
-        if self.zoom > self.zoomRange[1]: self.zoom, clamped = self.zoomRange[1], True
-
-        if not clamped or self.zoomClamp is False:
-            self.scale(zoomFactor, zoomFactor)
-
-    def keyPressEvent(self, event):
-
-        if event.key() == Qt.Key.Key_Backspace:
-            if not self.editingFlag:
-                self.deleteSelected()
-            else:
-                super().keyPressEvent(event)
-
-        #elif event.key() == Qt.Key.Key_S and event.modifiers() & Qt.Modifier.CTRL:
-         #   self.graphicsScene.scene.saveToFile("graph.json")
-
-        #elif event.key() == Qt.Key.Key_L and event.modifiers() & Qt.Modifier.CTRL:
-         #   self.graphicsScene.scene.loadFromFile("graph.json")
-
-        #elif self.isZKeyOnlyPressed(event) or self.isZAndCtrlKeyPressed(event):
-         #   self.graphicsScene.scene.sceneHistory.undo()
-
-        #elif self.isZAndCtrlAndAltPressed(event):
-         #   self.graphicsScene.scene.sceneHistory.redo()
-
-        #elif event.key() == Qt.Key.Key_H:
-
-         #   print( "View : DEBUG : History:    len(%d)" % len(self.graphicsScene.scene.sceneHistory.historyStack),
-          #         " --- current step", self.graphicsScene.scene.sceneHistory.historyCurrentStep)
-           # ix = 0
-            #for item in self.graphicsScene.scene.sceneHistory.historyStack:
-             #   print ("View : DEBUG : History: #", ix, "--", item['desc'], self.graphicsScene.scene.sceneHistory.historyStack)
-              #  ix += 1
-
-        else:
-            super().keyPressEvent(event)
 
     def deleteSelected(self):
 
