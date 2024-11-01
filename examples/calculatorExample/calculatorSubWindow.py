@@ -10,5 +10,13 @@ class CalculatorSubWindow(NodeEditorWidget):
 
         self.scene.addHasBeenModifiedListener(self.setTitle)
 
+        self._closeEventListeners = []
+
     def setTitle(self):
         self.setWindowTitle(self.getUserFriendlyFileName())
+
+    def addCloseEventListener(self, callback):
+        self._closeEventListeners.append(callback)
+
+    def closeEvent(self, event):
+        for callback in self._closeEventListeners: callback(self, event)

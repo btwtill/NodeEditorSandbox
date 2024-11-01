@@ -89,7 +89,7 @@ class Calculator(NodeEditorWindow):
         self.actionClose = QAction("Cl&ose", self,
                                    statusTip="Close the active window", triggered=self.mdiArea.closeActiveSubWindow)
         self.actionCloseAll = QAction("Close &All", self,
-                                   statusTip="Close all windows", triggered=self.mdiArea.closeActiveSubWindow)
+                                   statusTip="Close all windows", triggered=self.mdiArea.closeAllSubWindows)
         self.actionTile = QAction("&Tile", self,
                                   statusTip = "Tile the windows", triggered = self.mdiArea.tileSubWindows)
         self.actionCascade = QAction("&Cascade", self,
@@ -197,7 +197,8 @@ class Calculator(NodeEditorWindow):
                         if nodeEditor.fileLoad(fname):
                             self.statusBar().showMessage("File %s loaded" % fname, 5000)
                             nodeEditor.setTitle()
-                            subWindow = self.mdiArea.addSubWindow(nodeEditor)
+
+                            subWindow = self.createMdiChild(nodeEditor)
                             subWindow.show()
                         else:
                             nodeEditor.close()
@@ -212,11 +213,25 @@ class Calculator(NodeEditorWindow):
                           "This is a test Example Calculator Project"
                           "demonstating the use of multiple windows in an application with the use of the Node Editor")
 
-    def createMdiChild(self):
-        nodeEditor = CalculatorSubWindow()
+    def createMdiChild(self, childWidget=None):
+
+        nodeEditor = childWidget if childWidget is not None else CalculatorSubWindow()
         subWindow = self.mdiArea.addSubWindow(nodeEditor)
 
+        nodeEditor.scene.sceneHistory.addHistoryModifiedListener(self.updateEditMenu)
+
+        nodeEditor.addCloseEventListener(self.onSubWindowClose)
+
         return subWindow
+
+    def onSubWindowClose(self, widget, event):
+        existing = self.findMdiChild(widget.filename)
+        self.mdiArea.setActiveSubWindow(existing)
+
+        if self.maybeSave():
+            event.accept()
+        else:
+            event.ignore()
 
     def findMdiChild(self, fileName):
         for window in self.mdiArea.subWindowList():

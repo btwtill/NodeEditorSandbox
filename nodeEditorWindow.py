@@ -108,7 +108,6 @@ class NodeEditorWindow(QMainWindow):
             if DEBUG : print("Window : DEBUG : On File new!")
             self.getCurrentNodeEditorWidget().fileNew()
 
-
     def onFileOpen(self):
         if self.maybeSave():
             if DEBUG : print("Window : DEBUG : Open")
@@ -153,47 +152,54 @@ class NodeEditorWindow(QMainWindow):
             return True
 
     def onEditUndo(self):
-        if DEBUG : print("Window : DEBUG : On Edit Undo")
-        self.getCurrentNodeEditorWidget().scene.sceneHistory.undo()
+        if self.getCurrentNodeEditorWidget():
+            if DEBUG : print("Window : DEBUG : On Edit Undo")
+            self.getCurrentNodeEditorWidget().scene.sceneHistory.undo()
 
     def onEditRedo(self):
-        self.getCurrentNodeEditorWidget().scene.sceneHistory.redo()
-        if DEBUG : print("Window : DEBUG : On Edit Redo")
+        if self.getCurrentNodeEditorWidget():
+            self.getCurrentNodeEditorWidget().scene.sceneHistory.redo()
+            if DEBUG : print("Window : DEBUG : On Edit Redo")
 
     def onEditDelete(self):
-        if DEBUG : print("Window : DEBUG : On Edit Delete")
-        self.getCurrentNodeEditorWidget().scene.grScene.views()[0].deleteSelected()
+        if self.getCurrentNodeEditorWidget():
+            if DEBUG : print("Window : DEBUG : On Edit Delete")
+            self.getCurrentNodeEditorWidget().scene.grScene.views()[0].deleteSelected()
 
     def onEditCut(self):
-        data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete = True)
-        strData = json.dumps(data, indent = 4)
-        QApplication.instance().clipboard().setText(strData)
+        if self.getCurrentNodeEditorWidget():
+            data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete = True)
+            strData = json.dumps(data, indent = 4)
+            QApplication.instance().clipboard().setText(strData)
 
     def onEditCopy(self):
-        data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete=False)#
+        if self.getCurrentNodeEditorWidget():
+            data = self.getCurrentNodeEditorWidget().scene.clipboard.serializeSelected(delete=False)
 
-        if DEBUG : print("NodeEditorWindow : DEBUG : Serielized Data : ", data)
+            if DEBUG : print("NodeEditorWindow : DEBUG : Serielized Data : ", data)
 
-        strData = json.dumps(data, indent=4)
+            strData = json.dumps(data, indent=4)
 
-        QApplication.instance().clipboard().setText(strData)
+            QApplication.instance().clipboard().setText(strData)
 
     def onEditPaste(self):
-        raw_data = QApplication.instance().clipboard().text()
-        try:
-            data = json.loads(raw_data)
-        except ValueError as e:
-            print("Pasting not valid json data!", e)
-            return
 
-        if 'nodes' not in data:
-            print("JSON does not contain any nodes!")
-            return
+        if self.getCurrentNodeEditorWidget():
+            raw_data = QApplication.instance().clipboard().text()
+            try:
+                data = json.loads(raw_data)
+            except ValueError as e:
+                print("Pasting not valid json data!", e)
+                return
 
-        self.getCurrentNodeEditorWidget().scene.clipboard.deserializeFromClipboard(data)
+            if 'nodes' not in data:
+                print("JSON does not contain any nodes!")
+                return
+
+            self.getCurrentNodeEditorWidget().scene.clipboard.deserializeFromClipboard(data)
 
     def isModified(self):
-        return self.getCurrentNodeEditorWidget().scene.hasBeenModified
+        return self.getCurrentNodeEditorWidget().scene.isModified()
 
     def getCurrentNodeEditorWidget(self):
         return self.centralWidget()
