@@ -121,23 +121,37 @@ class NodeEditorWindow(QMainWindow):
 
     def onFileSave(self):
         if DEBUG : print("Window : DEBUG : Save")
-        if self.getCurrentNodeEditorWidget().filename is None: return self.onFileSaveAs()
-        self.getCurrentNodeEditorWidget().fileSave()
-        self.statusBar().showMessage("Successfully saved %s" % self.getCurrentNodeEditorWidget().filename)
 
-        return True
+        currentNodeEditor = self.getCurrentNodeEditorWidget()
+        if currentNodeEditor is not None:
+
+            if not currentNodeEditor.isFileNameSet(): return self.onFileSaveAs()
+
+            currentNodeEditor.fileSave()
+            self.statusBar().showMessage("Successfully saved %s" % currentNodeEditor.filename, 5000)
+
+            if hasattr(currentNodeEditor, "setTitle"): currentNodeEditor.setTitle()
+            else: self.setTitle()
+
+            return True
 
     def onFileSaveAs(self):
         if DEBUG : print("Window : DEBUG : Save As")
 
-        fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File')
+        currentNodeEditor = self.getCurrentNodeEditorWidget()
+        if currentNodeEditor is not None:
 
-        if fname == '':
-            return False
+            fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File')
 
-        self.getCurrentNodeEditorWidget().fileSave(fname)
-        self.statusBar().showMessage("Successfully saved as %s" % self.getCurrentNodeEditorWidget().filename)
-        return True
+            if fname == '': return False
+
+            currentNodeEditor.fileSave(fname)
+            self.statusBar().showMessage("Successfully saved as %s" % currentNodeEditor.filename, 5000)
+
+            if hasattr(currentNodeEditor, "setTitle"): currentNodeEditor.setTitle()
+            else: self.setTitle()
+
+            return True
 
     def onEditUndo(self):
         if DEBUG : print("Window : DEBUG : On Edit Undo")

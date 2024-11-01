@@ -10,6 +10,9 @@ def dumpException(e):
 
 def loadStyleSheet(filename):
     print("loading Style")
+
+    print(filename)
+
     file = QFile(filename)
     file.open(QFile.ReadOnly | QFile.Text)
 
