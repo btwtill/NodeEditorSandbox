@@ -1,5 +1,4 @@
 import os
-from xml.sax.saxutils import escape
 
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import *
@@ -7,9 +6,8 @@ from PyQt5.QtCore import *
 
 from nodeEditorWindow import NodeEditorWindow
 from utils import dumpException
-from utils import loadStyleSheet
-
 from examples.calculatorExample.calculatorSubWindow import CalculatorSubWindow
+from calculatorDragListBox import QDMDragListBox
 
 class Calculator(NodeEditorWindow):
 
@@ -42,14 +40,13 @@ class Calculator(NodeEditorWindow):
         self.windowMapper = QSignalMapper(self)
         self.windowMapper.mapped[QWidget].connect(self.setActiveSubWindow)
 
+        self.createNodesDock()
+
         self.createActions()
         self.createMenus()
         self.createToolBars()
         self.createStatusBar()
         self.updateMenus()
-
-        #docking
-        self.createNodesDock()
 
         self.readSettings()
 
@@ -58,16 +55,13 @@ class Calculator(NodeEditorWindow):
         self.show()
 
     def createNodesDock(self):
-        self.listWidget = QListWidget()
-        self.listWidget.addItem("Add")
-        self.listWidget.addItem("sub")
-        self.listWidget.addItem("multi")
+        self.nodesListWidget = QDMDragListBox()
 
-        self.items = QDockWidget("Nodes")
-        self.items.setWidget(self.listWidget)
-        self.items.setFloating(False)
+        self.nodesDock = QDockWidget("Nodes")
+        self.nodesDock.setWidget(self.nodesListWidget)
+        self.nodesDock.setFloating(False)
 
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.items)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.nodesDock)
 
     def createMenus(self):
         super().createMenus()
@@ -129,7 +123,16 @@ class Calculator(NodeEditorWindow):
         self.updateEditMenu()
 
     def updateWindowMenu(self):
+
         self.windowMenu.clear()
+
+        toolbarNodes = self.windowMenu.addAction("Nodes Toolbar")
+        toolbarNodes.setCheckable(True)
+        toolbarNodes.triggered.connect(self.onWindowNodesToolbar)
+
+        toolbarNodes.setChecked(self.nodesDock.isVisible())
+
+        self.windowMenu.addSeparator()
         self.windowMenu.addAction(self.actionClose)
         self.windowMenu.addAction(self.actionCloseAll)
         self.windowMenu.addSeparator()
@@ -168,6 +171,12 @@ class Calculator(NodeEditorWindow):
 
         self.actionUndo.setEnabled(hasMdiChild and activeMdiChild.canUndo())
         self.actionRedo.setEnabled(hasMdiChild and activeMdiChild.canRedo())
+
+    def onWindowNodesToolbar(self):
+        if self.nodesDock.isVisible():
+            self.nodesDock.hide()
+        else:
+            self.nodesDock.show()
 
     def getCurrentNodeEditorWidget(self):
         # We are Returning nodeEditor Widget Here
