@@ -61,7 +61,7 @@ class Calculator(NodeEditorWindow):
         self.nodesDock.setWidget(self.nodesListWidget)
         self.nodesDock.setFloating(False)
 
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.nodesDock)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.nodesDock)
 
     def createMenus(self):
         super().createMenus()
@@ -160,7 +160,6 @@ class Calculator(NodeEditorWindow):
             self.windowMapper.setMapping(action, window)
 
     def updateEditMenu(self):
-        print("Update Edit menu")
         activeMdiChild = self.getCurrentNodeEditorWidget()
         hasMdiChild = (activeMdiChild is not None)
 

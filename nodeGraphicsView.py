@@ -44,6 +44,9 @@ class QDMGraphicsView(QGraphicsView):
         self.cutline = QDMCutLine()
         self.graphicsScene.addItem(self.cutline)
 
+        self._dragEnterListeners = []
+        self._dropListeners = []
+
     def initUI(self):
         #Set rendering Attributes
         self.setRenderHints(QPainter.Antialiasing |
@@ -60,6 +63,8 @@ class QDMGraphicsView(QGraphicsView):
         #set Default Drag Behaviour
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setDragMode(QGraphicsView.RubberBandDrag)
+
+        self.setAcceptDrops(True)
 
     def mousePressEvent(self, event):
 
@@ -154,6 +159,18 @@ class QDMGraphicsView(QGraphicsView):
 
         else:
             super().keyPressEvent(event)
+
+    def dragEnterEvent(self, event):
+        for callback in self._dragEnterListeners: callback(event)
+
+    def dropEvent(self, event):
+        for callback in self._dropListeners: callback(event)
+
+    def addDragEnterListener(self, callback):
+        self._dragEnterListeners.append(callback)
+
+    def addDropListener(self, callback):
+        self._dropListeners.append(callback)
 
     def middleMouseButtonPress(self, event):
 

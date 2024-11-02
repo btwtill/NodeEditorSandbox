@@ -30,6 +30,9 @@ class QDMGraphicsScene(QGraphicsScene):
 
         self.setBackgroundBrush(self.colorBackgroundcolor)
 
+    def dragMoveEvent(self, event):
+        pass
+
     def setGrScene(self, width, height):
         self.setSceneRect(-width // 2, -height // 2, width, height)
 
