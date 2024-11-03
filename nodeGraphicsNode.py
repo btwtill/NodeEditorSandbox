@@ -31,7 +31,6 @@ class QDMGraphicsNode(QGraphicsItem):
         self.initTitle()
         self.title = self.node.title
 
-        self.initSockets()
         self.initContent()
 
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -154,6 +153,4 @@ class QDMGraphicsNode(QGraphicsItem):
 
         self.grContent.setWidget(self.content)
 
-    def initSockets(self):
-        pass
 

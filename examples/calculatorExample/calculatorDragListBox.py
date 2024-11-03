@@ -21,14 +21,17 @@ class QDMDragListBox(QListWidget):
 
         self.addDragListItems()
 
-
     def addDragListItems(self):
-        self.addDragListItem("Input",os.path.join(os.path.dirname(__file__), "icons/in.png"), OP_NODE_INPUT)
-        self.addDragListItem("Output", os.path.join(os.path.dirname(__file__), "icons/out.png"), OP_NODE_OUTPUT)
-        self.addDragListItem("Add",os.path.join(os.path.dirname(__file__), "icons/add.png"), OP_NODE_ADD)
-        self.addDragListItem("Substract",os.path.join(os.path.dirname(__file__), "icons/sub.png"), OP_NODE_SUBSTRACT)
-        self.addDragListItem("Multiply",os.path.join(os.path.dirname(__file__), "icons/mul.png"), OP_NODE_MULTIPLY)
-        self.addDragListItem("Divide",os.path.join(os.path.dirname(__file__), "icons/divide.png"), OP_NODE_DIVIDE)
+        keys = list(CALC_NODES.keys())
+        keys.sort()
+        for key in keys:
+            node = getClassFromOPCode(key)
+            if DEBUG :
+                print("DRAGLISTBOX:: -addDragListItems:: opTitle: ", node.opTitle)
+                print("DRAGLISTBOX:: -addDragListItems:: opCode: ", node.opCode)
+                print("DRAGLISTBOX:: -addDragListItems:: icon: ", node.icon)
+
+            self.addDragListItem(node.opTitle, node.icon, node.opCode)
 
     def addDragListItem(self, name, icon=None, opCode=0):
         item = QListWidgetItem(name, self)

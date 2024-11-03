@@ -15,34 +15,19 @@ class Node(Serializable):
         super().__init__()
 
         self._title = title
-
         self.scene = scene
 
-
-        self.content = QDMNodeContentWidget(self)
-        self.grNode = QDMGraphicsNode(self)
+        self.initInnerClasses()
+        self.initSettings()
 
         self.title = title
 
         self.scene.addNode(self)
         self.scene.grScene.addItem(self.grNode)
 
-        self.socketSpacing = 24
-
         self.inputs = []
         self.outputs = []
-
-        counter = 0
-        for item in inputs:
-            socket = Socket(node=self, index = counter, position = LEFT_TOP, socketType = item, multiEdges=False)
-            counter += 1
-            self.inputs.append(socket)
-
-        counter = 0
-        for item in outputs:
-            socket = Socket(node = self, index = counter, position = RIGHT_TOP, socketType = item, multiEdges=True)
-            counter += 1
-            self.outputs.append(socket)
+        self.initSockets(inputs, outputs)
 
     @property
     def pos(self):
@@ -56,6 +41,42 @@ class Node(Serializable):
     def title(self, value):
         self._title = value
         self.grNode.title = self._title
+
+    def initSettings(self):
+
+        self.socketSpacing = 24
+
+        self.inputSocketPosition = LEFT_TOP
+        self.outputSocketPosition = RIGHT_TOP
+        self.inputMulitEdged = False
+        self.outputMultiEdged = True
+
+    def initInnerClasses(self):
+        self.content = QDMNodeContentWidget(self)
+        self.grNode = QDMGraphicsNode(self)
+
+    def initSockets(self, inputs, outputs, reset=True):
+
+        if reset:
+            if hasattr(self, 'inputs') and hasattr(self, 'outputs'):
+                for socket in (self.inputs + self.outputs):
+                    self.scene.grScene.removeItem(socket.grSocket)
+                self.inputs = []
+                self.outputs = []
+
+        counter = 0
+        for item in inputs:
+            socket = Socket(node=self, index=counter, position=self.inputSocketPosition,
+                            socketType=item, multiEdges=self.inputMulitEdged)
+            counter += 1
+            self.inputs.append(socket)
+
+        counter = 0
+        for item in outputs:
+            socket = Socket(node=self, index=counter, position=self.outputSocketPosition,
+                            socketType=item, multiEdges=self.outputMultiEdged)
+            counter += 1
+            self.outputs.append(socket)
 
     def getSocketPosition(self, index, position):
 

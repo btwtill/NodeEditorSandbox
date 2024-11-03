@@ -5,7 +5,7 @@ from nodeSerializable import Serializable
 EDGE_TYPE_DIRECT = 1
 EDGE_TYPE_BEZIER = 2
 
-DEBUG = True
+DEBUG = False
 
 class Edge(Serializable):
     def __init__(self, scene, startSocket = None, endSocket = None, edgeType = EDGE_TYPE_DIRECT):

@@ -1,13 +1,18 @@
 import os
 
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+from examples.calculatorExample.calculatorConf import CALC_NODES
 from nodeEditorWindow import NodeEditorWindow
 from utils import dumpException
 from examples.calculatorExample.calculatorSubWindow import CalculatorSubWindow
 from calculatorDragListBox import QDMDragListBox
+from utils import pp
+from examples.calculatorExample.calculatorConfNodes import *
+
+DEBUG = False
 
 class Calculator(NodeEditorWindow):
 
@@ -15,6 +20,12 @@ class Calculator(NodeEditorWindow):
 
         self.nameCompany = "TLPF"
         self.nameProduct = "Calculator NodeEditor"
+
+        self.emptyIcon = QIcon(".")
+
+        if DEBUG:
+            print("CALCULATORWINDOW:: -initUI:: Registred Nodes:")
+            pp(CALC_NODES)
 
         self.mdiArea = QMdiArea()
 

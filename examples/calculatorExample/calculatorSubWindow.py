@@ -3,6 +3,10 @@ from nodeEditorWidget import NodeEditorWidget
 from PyQt5.QtCore import *
 from calculatorConf import *
 from nodeNode import Node
+
+from calculatorNodeBase import *
+from utils import dumpException
+
 DEBUG = False
 
 class CalculatorSubWindow(NodeEditorWidget):
@@ -53,11 +57,15 @@ class CalculatorSubWindow(NodeEditorWidget):
             mousePosition = event.pos()
             scenePosition = self.scene.grScene.views()[0].mapToScene(mousePosition)
 
-            print("CALCULATORSUBWINOW::: -onDrop:: Mouse Position: ", mousePosition)
-            print("CALCULATORSUBWINOW::: -onDrop:: Scene Position: ", scenePosition)
+            if DEBUG:
+                print("CALCULATORSUBWINOW::: -onDrop:: Mouse Position: ", mousePosition)
+                print("CALCULATORSUBWINOW::: -onDrop:: Scene Position: ", scenePosition)
 
-            node = Node(self.scene, text, inputs=[1, 1], outputs=[2])
-            node.setPosition(scenePosition.x(), scenePosition.y())
+            try:
+                node = getClassFromOPCode(opCode)(self.scene)
+                node.setPosition(scenePosition.x(), scenePosition.y())
+                self.scene.sceneHistory.storeHistory("Created node %s" % node.__class__.__name__)
+            except Exception as e: dumpException(e)
 
             event.setDropAction(Qt.DropAction.MoveAction)
             event.accept()
