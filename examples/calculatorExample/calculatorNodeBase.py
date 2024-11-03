@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from nodeNode import Node
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
+from nodeSocket import LEFT_CENTER, RIGHT_CENTER
 
 class CalcNodeContent(QDMNodeContentWidget):
     def initUI(self):
@@ -14,9 +15,11 @@ class CalcGraphicsNode(QDMGraphicsNode):
 
         self.width = 160
         self.height = 74
-        self.edgeSize = 5
+        self.edgeRoundness = 5
+        self.edgePadding = 0
         self.titleHeight = 24
-        self.padding = 8.0
+        self.titleHorizontalPadding = 8.0
+        self.titleVerticalPadding = 10.0
 
 class CalcNode(Node):
     icon = ""
@@ -31,3 +34,9 @@ class CalcNode(Node):
     def initInnerClasses(self):
         self.content = CalcNodeContent(self)
         self.grNode = CalcGraphicsNode(self)
+
+    def initSettings(self):
+        super().initSettings()
+
+        self.inputSocketPosition = LEFT_CENTER
+        self.outputSocketPosition = RIGHT_CENTER

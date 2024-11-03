@@ -5,7 +5,7 @@ from tokenize import Expfloat
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
-from nodeSocket import Socket, LEFT_TOP, RIGHT_TOP, LEFT_BOTTOM, RIGHT_BOTTOM
+from nodeSocket import Socket, LEFT_TOP, RIGHT_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, LEFT_CENTER, RIGHT_CENTER
 from utils import dumpException
 
 DEBUG = False
@@ -67,25 +67,51 @@ class Node(Serializable):
         counter = 0
         for item in inputs:
             socket = Socket(node=self, index=counter, position=self.inputSocketPosition,
-                            socketType=item, multiEdges=self.inputMulitEdged)
+                            socketType=item, multiEdges=self.inputMulitEdged,
+                            countOnThisNodeSide=len(inputs), isInput=True )
             counter += 1
             self.inputs.append(socket)
 
         counter = 0
         for item in outputs:
             socket = Socket(node=self, index=counter, position=self.outputSocketPosition,
-                            socketType=item, multiEdges=self.outputMultiEdged)
+                            socketType=item, multiEdges=self.outputMultiEdged,
+                            countOnThisNodeSide=len(outputs), isInput=False)
             counter += 1
             self.outputs.append(socket)
 
-    def getSocketPosition(self, index, position):
+    def getSocketPosition(self, index, position, numberOfSockets = 1):
 
-        x = 0 if position in (LEFT_TOP, LEFT_BOTTOM) else self.grNode.width
+        x = 0 if position in (LEFT_TOP, LEFT_CENTER, LEFT_BOTTOM) else self.grNode.width
 
         if position in (LEFT_BOTTOM, RIGHT_BOTTOM):
-            y = self.grNode.height - self.grNode.edgeSize - self.grNode.padding - index * self.socketSpacing
+            y = (self.grNode.height -
+                 self.grNode.edgeRoundness -
+                 self.grNode.titleHorizontalPadding -
+                 index * self.socketSpacing)
+
+        elif position in (LEFT_CENTER, RIGHT_CENTER):
+
+            nodeHeight =self.grNode.height
+            topOffset = self.grNode.titleHeight + 2 * self.grNode.titleVerticalPadding + self.grNode.edgePadding
+            availableHeight = nodeHeight - topOffset
+
+            totalHeightAllSockets = numberOfSockets * self.socketSpacing
+
+            newTop = availableHeight - totalHeightAllSockets
+
+            #y = topOffset + index * self.socketSpacing + newTop / 2
+            y = topOffset + availableHeight/2.0 +(index-0.5) * self.socketSpacing
+            if numberOfSockets > 1:
+                y -= self.socketSpacing * (numberOfSockets -1) /2
+
+        elif position in (LEFT_TOP, RIGHT_TOP):
+            y = (self.grNode.titleHeight +
+                 self.grNode.titleHorizontalPadding +
+                 self.grNode.edgeRoundness +
+                 index * self.socketSpacing)
         else:
-            y = self.grNode.titleHeight + self.grNode.padding + self.grNode.edgeSize + index * self.socketSpacing
+            y = 0
 
         return [x, y]
 
@@ -147,11 +173,14 @@ class Node(Serializable):
 
         self.inputs = []
         self.outputs = []
+        numberOfInputs = len(data['inputs'])
+        numberOfOutputs = len(data['outputs'])
 
         for socketData in data['inputs']:
             newSocket = Socket(node = self, index = socketData['index'],
                                position = socketData['position'],
-                               socketType = socketData['socketType'])
+                               socketType = socketData['socketType'],
+                               countOnThisNodeSide=numberOfInputs, isInput=True)
 
             newSocket.deserialize(socketData, hashmap, restoreId)
             self.inputs.append(newSocket)
@@ -159,7 +188,9 @@ class Node(Serializable):
         for socketData in data['outputs']:
             newSocket = Socket(node = self, index = socketData['index'],
                                position = socketData['position'],
-                               socketType = socketData['socketType'])
+                               socketType = socketData['socketType'],
+                               countOnThisNodeSide=numberOfOutputs, isInput=False)
+
             newSocket.deserialize(socketData, hashmap, restoreId)
             self.outputs.append(newSocket)
 

@@ -15,6 +15,7 @@ class QDMGraphicsNode(QGraphicsItem):
         self._wasMoved = False
         self._lastSelectedState = False
 
+
         self.initSizes()
         self.initGraphicElements()
         self.initUI()
@@ -88,9 +89,9 @@ class QDMGraphicsNode(QGraphicsItem):
 
         pathTitle = QPainterPath()
         pathTitle.setFillRule(Qt.FillRule.WindingFill)
-        pathTitle.addRoundedRect(0, 0, self.width, self.titleHeight, self.edgeSize, self.edgeSize)
-        pathTitle.addRect(0, self.titleHeight - self.edgeSize, self.edgeSize, self.edgeSize)
-        pathTitle.addRect(self.width - self.edgeSize, self.titleHeight - self.edgeSize, self.edgeSize, self.edgeSize)
+        pathTitle.addRoundedRect(0, 0, self.width, self.titleHeight, self.edgeRoundness, self.edgeRoundness)
+        pathTitle.addRect(0, self.titleHeight - self.edgeRoundness, self.edgeRoundness, self.edgeRoundness)
+        pathTitle.addRect(self.width - self.edgeRoundness, self.titleHeight - self.edgeRoundness, self.edgeRoundness, self.edgeRoundness)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.brushTitle)
         painter.drawPath(pathTitle.simplified())
@@ -101,17 +102,17 @@ class QDMGraphicsNode(QGraphicsItem):
                                    self.titleHeight,
                                    self.width,
                                    self.height - self.titleHeight,
-                                   self.edgeSize,
-                                   self.edgeSize)
+                                   self.edgeRoundness,
+                                   self.edgeRoundness)
 
-        pathContent.addRect(0, self.titleHeight, self.edgeSize, self.edgeSize)
-        pathContent.addRect(self.width - self.edgeSize, self.titleHeight, self.edgeSize, self.edgeSize)
+        pathContent.addRect(0, self.titleHeight, self.edgeRoundness, self.edgeRoundness)
+        pathContent.addRect(self.width - self.edgeRoundness, self.titleHeight, self.edgeRoundness, self.edgeRoundness)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.brushBackground)
         painter.drawPath(pathContent)
 
         pathOutline = QPainterPath()
-        pathOutline.addRoundedRect(0, 0, self.width, self.height, self.edgeSize, self.edgeSize)
+        pathOutline.addRoundedRect(0, 0, self.width, self.height, self.edgeRoundness, self.edgeRoundness)
         painter.setPen(self.defaultPen if not self.isSelected() else self.selectedPen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(pathOutline.simplified())
@@ -122,9 +123,11 @@ class QDMGraphicsNode(QGraphicsItem):
     def initSizes(self):
         self.width = 180
         self.height = 220
-        self.edgeSize = 10
+        self.edgeRoundness = 10
+        self.edgePadding = 10
         self.titleHeight = 24
-        self.padding = 20.0
+        self.titleHorizontalPadding = 20.0
+        self.titleVerticalPadding = 4.0
 
     def initGraphicElements(self):
         self.titleColor = Qt.GlobalColor.white
@@ -141,15 +144,15 @@ class QDMGraphicsNode(QGraphicsItem):
         self.titleItem.node = self.node
         self.titleItem.setDefaultTextColor(self.titleColor)
         self.titleItem.setFont(self.titleFont)
-        self.titleItem.setPos(self.padding, 0)
+        self.titleItem.setPos(self.titleHorizontalPadding, 0)
 
     def initContent(self):
         self.grContent = QGraphicsProxyWidget(self)
 
-        self.content.setGeometry(self.edgeSize,
-                                 self.titleHeight + self.edgeSize,
-                                 self.width - 2 * self.edgeSize,
-                                 self.height - 2 * self.edgeSize - self.titleHeight)
+        self.content.setGeometry(self.edgePadding,
+                                 self.titleHeight + self.edgePadding,
+                                 self.width - 2 * self.edgePadding,
+                                 self.height - 2 * self.edgePadding - self.titleHeight)
 
         self.grContent.setWidget(self.content)
 
