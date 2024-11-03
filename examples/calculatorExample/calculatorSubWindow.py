@@ -20,7 +20,16 @@ class CalculatorSubWindow(NodeEditorWidget):
         self.scene.addDragEnterListener(self.onDragEnter)
         self.scene.addDropListener(self.onDrop)
 
+        self.scene.setNodeClassSelector(self.getNodeClassFromData)
+
         self._closeEventListeners = []
+
+    def getNodeClassFromData(self, data):
+        if DEBUG:
+            print("CALCULATORSUBWINDOW:: -getNodeClassFromData:: data: ", data)
+            print("CALCULATORSUBWINDOW:: -getNodeClassFromData:: opCode in data: ", ('opCode' in data))
+        if 'opCode' not in data: return Node
+        return getClassFromOPCode(data['opCode'])
 
     def setTitle(self):
         self.setWindowTitle(self.getUserFriendlyFileName())

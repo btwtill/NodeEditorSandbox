@@ -4,6 +4,8 @@ from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import LEFT_CENTER, RIGHT_CENTER
 
+DEBUG = False
+
 class CalcNodeContent(QDMNodeContentWidget):
     def initUI(self):
         label = QLabel(self.node.contentLabel, self)
@@ -40,3 +42,13 @@ class CalcNode(Node):
 
         self.inputSocketPosition = LEFT_CENTER
         self.outputSocketPosition = RIGHT_CENTER
+
+    def serialize(self):
+        res = super().serialize()
+        res['opCode'] = self.__class__.opCode
+        return res
+    
+    def deserialize(self, data, hashmap = {}, restoreId = True):
+        result = super().deserialize(data, hashmap, restoreId)
+        if DEBUG : print("CALCULATORNODEBASE:: --deserialize:: CalcNode '%s' " % self.__class__.__name__, " Result: ", result)
+        return result

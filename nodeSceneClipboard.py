@@ -3,7 +3,7 @@ from nodeNode import Node
 from nodeEdge import Edge
 from nodeGraphicsEdge import QDMGraphicsEdge
 
-DEBUG = True
+DEBUG = False
 
 class SceneClipboard():
     def __init__(self, scene):
@@ -54,7 +54,6 @@ class SceneClipboard():
                 self.scene.grScene.views()[0].deleteSelected()
                 self.scene.sceneHistory.storeHistory("Cut out Elements From Scene", setModified = True)
 
-
         return OrderedDict([
             ("nodes", selectedNodes),
             ("edges", edge_final),
@@ -63,7 +62,7 @@ class SceneClipboard():
 
     def deserializeFromClipboard(self, data):
 
-        if DEBUG : print("CLIPBOARD : DEBUG : Deserializing current Clipboard")
+        if DEBUG : print("CLIPBOARD:: -deserializeFromClipboard:: Deserializing current Clipboard")
 
         hashmap = {}
 
@@ -87,10 +86,10 @@ class SceneClipboard():
         offsetY = mouseScenePosition.y() - boundingBoxCenterY
 
         for nodeData in data["nodes"]:
-            newNode = Node(self.scene)
+            newNode = self.scene.getNodeClassFromData(nodeData)(self.scene)
             newNode.deserialize(nodeData, hashmap, restoreId=False)
-            position = newNode.pos
 
+            position = newNode.pos
             newNode.setPosition(position.x() + offsetX, position.y() + offsetY)
 
         if "edges" in data:

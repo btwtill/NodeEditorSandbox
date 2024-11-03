@@ -27,7 +27,7 @@ class QDMNodeContentWidget(QWidget, Serializable):
 
         ])
     def deserialize(self, data, hashmap = {}):
-        return False
+        return True
 
 class QDMTextEdit(QTextEdit):
 

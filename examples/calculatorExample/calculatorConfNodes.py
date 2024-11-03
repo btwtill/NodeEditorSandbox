@@ -1,7 +1,12 @@
 import os
+from idlelib.run import Executive
+
 from calculatorConf import *
 from calculatorNodeBase import *
 from PyQt5.QtCore import *
+
+from utils import dumpException
+
 
 @registerNode(OP_NODE_ADD)
 class CalcNode_Add(CalcNode):
@@ -35,6 +40,27 @@ class CalcNode_Divide(CalcNode):
     contentLabel = "/"
     contentLabelObjectName = "calcNodeDiv"
 
+class CalcInputContent(QDMNodeContentWidget):
+    def initUI(self):
+        self.edit = QLineEdit("1", self)
+        self.edit.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.edit.setObjectName(self.node.contentLabelObjectName)
+
+    def serialize(self):
+        result = super().serialize()
+        result['value'] = self.edit.text()
+        return result
+
+    def deserialize(self, data, hashmap = {}):
+        result = super().deserialize(data, hashmap)
+        try:
+            value = data['value']
+            self.edit.setText(value)
+            return True & result
+        except Executive as e: dumpException(e)
+
+        return result
+
 @registerNode(OP_NODE_INPUT)
 class CalcNode_Input(CalcNode):
     icon = os.path.join(os.path.dirname(__file__), "icons/in.png")
@@ -48,12 +74,6 @@ class CalcNode_Input(CalcNode):
     def initInnerClasses(self):
         self.content = CalcInputContent(self)
         self.grNode = CalcGraphicsNode(self)
-
-class CalcInputContent(QDMNodeContentWidget):
-    def initUI(self):
-        self.edit = QLineEdit("1", self)
-        self.edit.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.edit.setObjectName(self.node.contentLabelObjectName)
 
 @registerNode(OP_NODE_OUTPUT)
 class CalcNode_Output(CalcNode):

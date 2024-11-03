@@ -1,6 +1,4 @@
-from turtle import config_dict
 
-from examples.calculatorExample.calculatorNodeBase import CalcNode
 
 LISTBOX_MIMETYPE = "application/x-item"
 OP_NODE_INPUT= 1

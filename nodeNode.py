@@ -159,41 +159,46 @@ class Node(Serializable):
         )
 
     def deserialize(self, data, hashmap = {}, restoreId = True):
-        if DEBUG : print("NODE : DEBUG : Deserializing data", data)
 
-        if restoreId : self.id = data['id']
+        try:
+            if DEBUG : print("NODE : DEBUG : Deserializing data", data)
 
-        hashmap[data['id']] = self
-        self.title = data['title']
+            if restoreId : self.id = data['id']
 
-        self.setPosition(data['pos_x'], data['pos_y'])
+            hashmap[data['id']] = self
+            self.title = data['title']
 
-        data['inputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000 )
-        data['outputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000)
+            self.setPosition(data['pos_x'], data['pos_y'])
 
-        self.inputs = []
-        self.outputs = []
-        numberOfInputs = len(data['inputs'])
-        numberOfOutputs = len(data['outputs'])
+            data['inputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000 )
+            data['outputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000)
 
-        for socketData in data['inputs']:
-            newSocket = Socket(node = self, index = socketData['index'],
-                               position = socketData['position'],
-                               socketType = socketData['socketType'],
-                               countOnThisNodeSide=numberOfInputs, isInput=True)
+            self.inputs = []
+            self.outputs = []
+            numberOfInputs = len(data['inputs'])
+            numberOfOutputs = len(data['outputs'])
 
-            newSocket.deserialize(socketData, hashmap, restoreId)
-            self.inputs.append(newSocket)
+            for socketData in data['inputs']:
+                newSocket = Socket(node = self, index = socketData['index'],
+                                   position = socketData['position'],
+                                   socketType = socketData['socketType'],
+                                   countOnThisNodeSide=numberOfInputs, isInput=True)
 
-        for socketData in data['outputs']:
-            newSocket = Socket(node = self, index = socketData['index'],
-                               position = socketData['position'],
-                               socketType = socketData['socketType'],
-                               countOnThisNodeSide=numberOfOutputs, isInput=False)
+                newSocket.deserialize(socketData, hashmap, restoreId)
+                self.inputs.append(newSocket)
 
-            newSocket.deserialize(socketData, hashmap, restoreId)
-            self.outputs.append(newSocket)
+            for socketData in data['outputs']:
+                newSocket = Socket(node = self, index = socketData['index'],
+                                   position = socketData['position'],
+                                   socketType = socketData['socketType'],
+                                   countOnThisNodeSide=numberOfOutputs, isInput=False)
 
-        if DEBUG : print("NODE : DEBUG : Hashmap...", hashmap)
+                newSocket.deserialize(socketData, hashmap, restoreId)
+                self.outputs.append(newSocket)
 
-        return True
+            if DEBUG : print("NODE : DEBUG : Hashmap...", hashmap)
+        except Exception as e: dumpException(e)
+
+        result = self.content.deserialize(data['content'], hashmap)
+
+        return True & result

@@ -32,6 +32,8 @@ class Scene(Serializable):
         self.sceneWidth = 64000
         self.sceneHeight = 64000
 
+        self.nodeClassSelector = None
+
         self.initUI()
 
         self.clipboard = SceneClipboard(self)
@@ -147,6 +149,16 @@ class Scene(Serializable):
             except Exception as e:
                 dumpException(e)
 
+    def setNodeClassSelector(self, classSelectingFunction):
+        self.nodeClassSelector = classSelectingFunction
+
+    def getNodeClassFromData(self, nodeData):
+        if DEBUG :
+            print("NODESCENE:: -getNodeClassFromData:: nodeClassSelector: ", self.nodeClassSelector)
+            print("NODESCENE:: -getNodeClassFromData:: nodeClassSelectorResult: ", self.nodeClassSelector(nodeData))
+
+        return Node if self.nodeClassSelector is None else self.nodeClassSelector(nodeData)
+
     def serialize(self):
         nodes, edges = [], []
 
@@ -173,9 +185,9 @@ class Scene(Serializable):
         if restoreId : self.id = data['id']
 
         for nodeData in data["nodes"]:
-            Node(self).deserialize(nodeData, hashmap, restoreId)
+            self.getNodeClassFromData(nodeData)(self).deserialize(nodeData, hashmap, restoreId)
 
         for edgeData in data["edges"]:
-           Edge(self).deserialize(edgeData, hashmap, restoreId)
+            Edge(self).deserialize(edgeData, hashmap, restoreId)
 
         return True
