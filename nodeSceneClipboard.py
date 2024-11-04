@@ -51,7 +51,7 @@ class SceneClipboard():
 
         if delete :
             for node in selectedNodes:
-                self.scene.grScene.views()[0].deleteSelected()
+                self.scene.getView().deleteSelected()
                 self.scene.sceneHistory.storeHistory("Cut out Elements From Scene", setModified = True)
 
         return OrderedDict([
@@ -66,7 +66,7 @@ class SceneClipboard():
 
         hashmap = {}
 
-        view = self.scene.grScene.views()[0]
+        view = self.scene.getView()
         mouseScenePosition = view.lastSceneMousePosition
         minX, maxX, minY, maxY = 0,0,0,0
 

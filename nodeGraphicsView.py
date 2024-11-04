@@ -180,6 +180,24 @@ class QDMGraphicsView(QGraphicsView):
         super().mouseReleaseEvent(releaseEvent)
         self.setDragMode(QGraphicsView.ScrollHandDrag)
 
+        #Debug Item under mouse
+        item = self.getItemAtClick(event)
+        if DEBUG:
+            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting",
+                                                        item.edge.startSocket, " <----> ", item.edge.endSocket)
+            if type(item) == QDMGraphicsSocket: print("RMB : DEBUG : ", item.socket, "has Edges", item.socket.edges)
+
+            if item == None:
+                print("View : DEBUG : Scene: ")
+                print("     Nodes: ")
+                for item in self.graphicsScene.scene.nodes:
+                    print("         ", item)
+                print("     Edges: ")
+                for item in self.graphicsScene.scene.edges:
+                    print("         ", item)
+            elif type(item) == QDMGraphicsEdge:
+                print("View : DEBUG : Edge : ")
+
         #imiting that it would be a left mouse button klick event
         fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
                                 event.buttons() | Qt.MouseButton.LeftButton, event.modifiers())
@@ -321,25 +339,6 @@ class QDMGraphicsView(QGraphicsView):
         super().mouseReleaseEvent(event)
 
     def rightMouseButtonPressEvent(self, event):
-
-        item = self.getItemAtClick(event)
-
-        if DEBUG:
-            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting" ,
-                                                        item.edge.startSocket, " <----> ", item.edge.endSocket)
-            if type(item) == QDMGraphicsSocket: print("RMB : DEBUG : ", item.socket, "has Edges", item.socket.edges)
-
-            if item == None:
-                print("View : DEBUG : Scene: ")
-                print("     Nodes: ")
-                for item in self.graphicsScene.scene.nodes:
-                    print("         ", item)
-                print("     Edges: ")
-                for item in self.graphicsScene.scene.edges:
-                    print("         ", item)
-            elif type(item) == QDMGraphicsEdge:
-                print("View : DEBUG : Edge : ")
-
         super().mousePressEvent(event)
 
     def rightMouseButtonReleaseEvent(self, event):

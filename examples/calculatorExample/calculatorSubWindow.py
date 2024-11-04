@@ -1,4 +1,9 @@
+from lib2to3.fixes.fix_input import context
+
 from PyQt5.QtGui import *
+from select import select
+
+from nodeEdge import EDGE_TYPE_BEZIER, EDGE_TYPE_DIRECT
 from nodeEditorWidget import NodeEditorWidget
 from PyQt5.QtCore import *
 from calculatorConf import *
@@ -7,7 +12,7 @@ from nodeNode import Node
 from calculatorNodeBase import *
 from utils import dumpException
 
-DEBUG = False
+DEBUG = True
 
 class CalculatorSubWindow(NodeEditorWidget):
     def __init__(self):
@@ -15,6 +20,8 @@ class CalculatorSubWindow(NodeEditorWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.setTitle()
+
+        self.initNewNodeActions()
 
         self.scene.addHasBeenModifiedListener(self.setTitle)
         self.scene.addDragEnterListener(self.onDragEnter)
@@ -30,6 +37,22 @@ class CalculatorSubWindow(NodeEditorWidget):
             print("CALCULATORSUBWINDOW:: -getNodeClassFromData:: opCode in data: ", ('opCode' in data))
         if 'opCode' not in data: return Node
         return getClassFromOPCode(data['opCode'])
+
+    def initNewNodeActions(self):
+        self.nodeActions = {}
+        keys = list(CALC_NODES.keys())
+        keys.sort()
+        for key in keys:
+            node = CALC_NODES[key]
+            self.nodeActions[node.opCode] = QAction(QIcon(node.icon), node.opTitle)
+            self.nodeActions[node.opCode].setData(node.opCode)
+
+    def initNodesContextMenu(self):
+        contextMenu = QMenu()
+        keys = list(CALC_NODES.keys())
+        keys.sort()
+        for key in keys: contextMenu.addAction(self.nodeActions[key])
+        return contextMenu
 
     def setTitle(self):
         self.setWindowTitle(self.getUserFriendlyFileName())
@@ -64,7 +87,7 @@ class CalculatorSubWindow(NodeEditorWidget):
             if DEBUG : print("CALCULATORSUBWINOW::: -onDrop:: received: [%d] '%s'" % (opCode, text))
 
             mousePosition = event.pos()
-            scenePosition = self.scene.grScene.views()[0].mapToScene(mousePosition)
+            scenePosition = self.scene.getView().mapToScene(mousePosition)
 
             if DEBUG:
                 print("CALCULATORSUBWINOW::: -onDrop:: Mouse Position: ", mousePosition)
@@ -85,3 +108,75 @@ class CalculatorSubWindow(NodeEditorWidget):
 
     def closeEvent(self, event):
         for callback in self._closeEventListeners: callback(self, event)
+
+    def handleNodeContextMenu(self, event):
+        if DEBUG: print("CALCULATORSUBWINDOW:: -handleNodeContextMenu:: DisplayWindow NodeContextMenu")
+
+        contextMenu = QMenu(self)
+
+        markDirtyAction = contextMenu.addAction("Mark Dirty")
+        markInvalidAction = contextMenu.addAction("Mark Invalid")
+        unmarkInvalidAction = contextMenu.addAction("Unmark Invalid")
+        evalAction = contextMenu.addAction("Eval")
+        action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        selected = None
+        item = self.scene.getItemAt(event.pos())
+
+        if type(item) == QGraphicsProxyWidget:
+            selected = item.widget()
+
+        if hasattr(item, 'node'):
+            selected = item.node
+        if hasattr(item, 'socket'):
+            selected = item.socket.node
+
+        if DEBUG: print("CALCULATORSUBWINDOW:: -handleNodeContextMenu:: Got Item: ", selected)
+
+
+    def handleEdgeContextMenu(self, event):
+        if DEBUG: print("CALCULATORSUBWINDOW:: -handleEdgeContextMenu:: DisplayWindow EdgeContextMenu")
+
+        contextMenu = QMenu(self)
+        bezierAction = contextMenu.addAction("Bezier Edge")
+        directAction = contextMenu.addAction("Direct Edge")
+        action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        selected = None
+        item = self.scene.getItemAt(event.pos())
+
+        if hasattr(item, 'edge'):
+            selected = item.edge
+
+        if selected and action == bezierAction: selected.edgeType = EDGE_TYPE_BEZIER
+        if selected and action == directAction: selected.edgeType = EDGE_TYPE_DIRECT
+
+    def handleNewNodeContextMenu(self, event):
+        if DEBUG: print("CALCULATORSUBWINDOW:: -handleNewNodeContextMenu:: DisplayWindow NewNodeContextMenu ")
+
+        contextMenu = self.initNodesContextMenu()
+        action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        if action is not None:
+            newCalcNode =getClassFromOPCode(action.data())(self.scene)
+            scenePosition = self.scene.getView().mapToScene(event.pos())
+            newCalcNode.setPosition(scenePosition.x(), scenePosition.y())
+            print("CALCULATORSUBWINDOW:: -handleNewNodeContextMenu:: Selected Node: ", newCalcNode)
+
+    def contextMenuEvent(self, event):
+        try:
+            item = self.scene.getItemAt(event.pos())
+            if DEBUG : print("CALCULATORSUBWINDOW:: -contextMenuEvent:: Item: ", item)
+
+            if type(item) == QGraphicsProxyWidget:
+                item = item.widget()
+
+            if hasattr(item, 'node') or hasattr(item, 'socket'):
+                self.handleNodeContextMenu(event)
+            elif hasattr(item, 'edge'):
+                self.handleEdgeContextMenu(event)
+            else:
+                self.handleNewNodeContextMenu(event)
+
+            return super().contextMenuEvent(event)
+        except Exception as e: dumpException(e)
