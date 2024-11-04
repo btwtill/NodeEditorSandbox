@@ -28,6 +28,15 @@ class CalculatorSubWindow(NodeEditorWidget):
 
         self._closeEventListeners = []
 
+    def fileLoad(self, fileName):
+        if super().fileLoad(fileName):
+            for node in self.scene.nodes:
+                if node.__class__.__name__ == "CalcNode_Output":
+                    node.eval()
+            return True
+        else:
+            return False
+
     def getNodeClassFromData(self, data):
         if DEBUG:
             print("CALCULATORSUBWINDOW:: -getNodeClassFromData:: data: ", data)

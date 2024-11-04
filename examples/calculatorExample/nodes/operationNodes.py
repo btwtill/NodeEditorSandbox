@@ -10,10 +10,9 @@ class CalcNode_Add(CalcNode):
     contentLabel = "+"
     contentLabelObjectName = "calcNodeBG"
 
-    def evaluationNodeImplementation(self):
-        self.markInvalid(False)
-        self.markDirty(False)
-        return 123
+    def evalOperation(self, input1, input2):
+        return input1 + input2
+
 
 @registerNode(OP_NODE_SUBSTRACT)
 class CalcNode_Subtract(CalcNode):
@@ -23,6 +22,9 @@ class CalcNode_Subtract(CalcNode):
     contentLabel = "-"
     contentLabelObjectName = "calcNodeBG"
 
+    def evalOperation(self, input1, input2):
+        return input1 - input2
+
 @registerNode(OP_NODE_MULTIPLY)
 class CalcNode_Multiply(CalcNode):
     icon = os.path.join(os.path.dirname(__file__), "icons/mul.png")
@@ -31,6 +33,9 @@ class CalcNode_Multiply(CalcNode):
     contentLabel = "*"
     contentLabelObjectName = "calcNodeMul"
 
+    def evalOperation(self, input1, input2):
+        return input1 * input2
+
 @registerNode(OP_NODE_DIVIDE)
 class CalcNode_Divide(CalcNode):
     icon = os.path.join(os.path.dirname(__file__), "icons/divide.png")
@@ -38,4 +43,7 @@ class CalcNode_Divide(CalcNode):
     opTitle = "divide"
     contentLabel = "/"
     contentLabelObjectName = "calcNodeDiv"
+
+    def evalOperation(self, input1, input2):
+        return input1 / input2
 

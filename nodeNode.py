@@ -1,7 +1,4 @@
 from collections import OrderedDict
-from socket import socket
-from tokenize import Expfloat
-
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
@@ -231,8 +228,9 @@ class Node(Serializable):
             outputs.append(otherSocket.node)
 
         return outputs
+
     def onEdgeConnectionChanged(self, newEdge):
-        print("%s:: onEdgeConnectionChanged:: changed" % self.__class__.__name__, newEdge)
+        if DEBUG : print("%s:: onEdgeConnectionChanged:: changed" % self.__class__.__name__, newEdge)
 
     def onInputChanged(self, newEdge):
         print("%s:: onInputChanged:: input changed" % self.__class__.__name__, newEdge)

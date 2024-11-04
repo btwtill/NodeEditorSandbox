@@ -1,5 +1,4 @@
 import os
-from multiprocessing.managers import Value
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -10,7 +9,7 @@ from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import LEFT_CENTER, RIGHT_CENTER
 from utils import dumpException
 
-DEBUG = True
+DEBUG = False
 
 class CalcNodeContent(QDMNodeContentWidget):
     def initUI(self):
@@ -70,12 +69,34 @@ class CalcNode(Node):
         self.inputSocketPosition = LEFT_CENTER
         self.outputSocketPosition = RIGHT_CENTER
 
-    def evaluationNodeImplementation(self):
+    def evalOperation(self, input1, input2):
         return 123
+
+    def evaluationNodeImplementation(self):
+        input1 = self.getInput(0)
+        input2 = self.getInput(1)
+
+        if  input1 is None or input2 is None:
+            self.markDirty()
+            self.markDescendeantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
+            return None
+
+        else:
+            value = self.evalOperation(input1.eval(), input2.eval())
+            self.value = value
+            self.markDirty(False)
+            self.markInvalid(False)
+            self.grNode.setToolTip("")
+
+            self.markDescendeantsDirty()
+            self.evalChildren()
+
+            return value
 
     def eval(self):
         if not self.isDirty() and not self.isInvalid():
-            print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
+            if DEBUG : print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
             return self.value
 
         try:
