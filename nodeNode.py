@@ -161,6 +161,9 @@ class Node(Serializable):
     def onMarkedInvalid(self):
         pass
 
+    def doSelect(self, newState):
+        self.grNode.doSelect(newState)
+
     def eval(self):
         self.markDirty(False)
         self.markInvalid(False)

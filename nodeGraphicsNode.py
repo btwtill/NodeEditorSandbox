@@ -137,6 +137,11 @@ class QDMGraphicsNode(QGraphicsItem):
     def onSelected(self):
         self.node.scene.grScene.itemsSelected.emit()
 
+    def doSelect(self, newState = True):
+        self.setSelected(newState)
+        self.lastSelectedState = newState
+        if newState: self.onSelected()
+
     def initSizes(self):
         self.width = 180
         self.height = 220

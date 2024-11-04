@@ -79,6 +79,9 @@ class Edge(Serializable):
     def getOtherSocket(self, knownSocket):
         return self.startSocket if knownSocket == self.endSocket else self.endSocket
 
+    def doSelect(self, newState = True):
+        self.grEdge.doSelect(newState)
+
     def updatePositions(self):
 
         sourcePos = self.startSocket.getSocketPosition()

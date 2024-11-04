@@ -91,6 +91,11 @@ class QDMGraphicsEdge(QGraphicsPathItem):
     def onSelected(self):
         self.edge.scene.grScene.itemsSelected.emit()
 
+    def doSelect(self, newState = True):
+        self.setSelected(newState)
+        self.lastSelectedState = newState
+        if newState: self.onSelected()
+
     def intersectsWith(self, p1, p2):
         cutpath = QPainterPath(p1)
         cutpath.lineTo(p2)

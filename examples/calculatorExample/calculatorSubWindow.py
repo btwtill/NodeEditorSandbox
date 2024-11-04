@@ -1,6 +1,8 @@
 from PyQt5.QtGui import *
 from select import select
 from PyQt5.QtCore import *
+
+from nodeGraphicsView import MODE_EDGEDRAG
 from nodeNode import Node
 from nodeEdge import EDGE_TYPE_BEZIER, EDGE_TYPE_DIRECT
 from nodeEditorWidget import NodeEditorWidget
@@ -21,6 +23,7 @@ class CalculatorSubWindow(NodeEditorWidget):
         self.initNewNodeActions()
 
         self.scene.addHasBeenModifiedListener(self.setTitle)
+        self.scene.sceneHistory.addHistoryRestoreListener(self.onHistoryRestored)
         self.scene.addDragEnterListener(self.onDragEnter)
         self.scene.addDropListener(self.onDrop)
 
@@ -28,11 +31,17 @@ class CalculatorSubWindow(NodeEditorWidget):
 
         self._closeEventListeners = []
 
+    def onHistoryRestored(self):
+        self.doEvalOutputs()
+
+    def doEvalOutputs(self):
+        for node in self.scene.nodes:
+            if node.__class__.__name__ == "CalcNode_Output":
+                node.eval()
+
     def fileLoad(self, fileName):
         if super().fileLoad(fileName):
-            for node in self.scene.nodes:
-                if node.__class__.__name__ == "CalcNode_Output":
-                    node.eval()
+            self.doEvalOutputs()
             return True
         else:
             return False
@@ -178,6 +187,15 @@ class CalculatorSubWindow(NodeEditorWidget):
             newCalcNode =getClassFromOPCode(action.data())(self.scene)
             scenePosition = self.scene.getView().mapToScene(event.pos())
             newCalcNode.setPosition(scenePosition.x(), scenePosition.y())
+
+            if self.scene.getView().mode == MODE_EDGEDRAG:
+                self.scene.getView().edgeDragEnd(newCalcNode.inputs[0].grSocket)
+
+                newCalcNode.doSelect(True)
+                #newCalcNode.inputs[0].edges[-1].doSelect(True)
+
+            else:
+                self.scene.sceneHistory.storeHistory("Created %s " % newCalcNode.__class__.__name__)
 
     def contextMenuEvent(self, event):
         try:
