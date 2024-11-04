@@ -12,9 +12,9 @@ class QDMGraphicsNode(QGraphicsItem):
         self.node = node
         self.content = self.node.content
 
+        self.hovered = False
         self._wasMoved = False
         self._lastSelectedState = False
-
 
         self.initSizes()
         self.initGraphicElements()
@@ -29,13 +29,15 @@ class QDMGraphicsNode(QGraphicsItem):
         self.titleItem.setPlainText(self._title)
 
     def initUI(self):
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+
+        self.setAcceptHoverEvents(True)
+
         self.initTitle()
         self.title = self.node.title
 
         self.initContent()
-
-        self.setFlag(QGraphicsItem.ItemIsSelectable)
-        self.setFlag(QGraphicsItem.ItemIsMovable)
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -113,9 +115,24 @@ class QDMGraphicsNode(QGraphicsItem):
 
         pathOutline = QPainterPath()
         pathOutline.addRoundedRect(0, 0, self.width, self.height, self.edgeRoundness, self.edgeRoundness)
-        painter.setPen(self.defaultPen if not self.isSelected() else self.selectedPen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawPath(pathOutline.simplified())
+
+        if self.hovered:
+            painter.setPen(self.hoveredPen)
+            painter.drawPath(pathOutline.simplified())
+            painter.setPen(self.defaultPen)
+            painter.drawPath(pathOutline.simplified())
+        else:
+            painter.setPen(self.defaultPen if not self.isSelected() else self.selectedPen)
+            painter.drawPath(pathOutline.simplified())
+
+    def hoverEnterEvent(self, event):
+        self.hovered = True
+        self.update()
+
+    def hoverLeaveEvent(self, event):
+        self.hovered = False
+        self.update()
 
     def onSelected(self):
         self.node.scene.grScene.itemsSelected.emit()
@@ -133,8 +150,16 @@ class QDMGraphicsNode(QGraphicsItem):
         self.titleColor = Qt.GlobalColor.white
         self.titleFont = QFont("Helvetica", 10)
 
-        self.defaultPen = QPen(QColor("#7F000000"))
-        self.selectedPen = QPen(QColor("#FFFFA637"))
+        self.color = QColor("#7F000000")
+        self.colorSelected = QColor("#FFFFA637")
+        self.colorHoverd = QColor("#FFFFAA39")
+
+        self.defaultPen = QPen(self.color)
+        self.defaultPen.setWidthF(2.0)
+        self.selectedPen = QPen(self.colorSelected)
+        self.selectedPen.setWidthF(2.0)
+        self.hoveredPen = QPen(self.colorHoverd)
+        self.hoveredPen.setWidthF(4.0)
 
         self.brushTitle = QBrush(QColor("#FF313131"))
         self.brushBackground = QBrush(QColor("#E3212121"))

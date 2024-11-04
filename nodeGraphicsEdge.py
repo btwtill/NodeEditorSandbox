@@ -15,6 +15,7 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.edge = edge
 
         self._lastSelectedState = False
+        self.hovered = False
 
         self.posSource = [0, 0]
         self.posDestination = [200, 100]
@@ -24,17 +25,23 @@ class QDMGraphicsEdge(QGraphicsPathItem):
 
     def initUI(self):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setAcceptHoverEvents(True)
+
         self.setZValue(-1)
 
     def initGraphicElements(self):
         self.color = QColor("#001000")
         self.colorSelected = QColor("#FFFF7700")
+        self.colorHovered = QColor("#FFFFAA39")
 
         self.pen = QPen(self.color)
         self.pen.setWidth(2)
 
         self.penSelected = QPen(self.colorSelected)
         self.penSelected.setWidth(2)
+
+        self.penHovered = QPen(self.colorHovered)
+        self.penHovered.setWidthF(5.0)
 
         self.penDragged = QPen(self.color)
         self.penDragged.setWidthF(2.0)
@@ -48,13 +55,17 @@ class QDMGraphicsEdge(QGraphicsPathItem):
 
     def paint(self, painter, QPainter=None, *args, **kwargs):
         self.setPath(self.calculatePath())
-        self.calculatePath()
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        if self.hovered and self.edge.endSocket is not None:
+            painter.setPen(self.penHovered)
+            painter.drawPath(self.path())
 
         if self.edge.endSocket == None:
             painter.setPen(self.penDragged)
         else:
             painter.setPen(self.pen if not self.isSelected() else self.penSelected)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
+
         painter.drawPath(self.path())
 
     def mouseReleaseEvent(self, event):
@@ -64,6 +75,14 @@ class QDMGraphicsEdge(QGraphicsPathItem):
             self.edge.scene.resetLastSelectedStates()
             self._lastSelectedState = self.isSelected()
             self.onSelected()
+
+    def hoverEnterEvent(self, event):
+        self.hovered = True
+        self.update()
+
+    def hoverLeaveEvent(self, event):
+        self.hovered = False
+        self.update()
 
     def calculatePath(self):
         #Method to draw the path from a to b
