@@ -75,7 +75,8 @@ class Edge(Serializable):
         if self.startSocket is not None:
             self.updatePositions()
 
-
+    def getOtherSocket(self, knownSocket):
+        return self.startSocket if knownSocket == self.endSocket else self.endSocket
 
     def updatePositions(self):
 

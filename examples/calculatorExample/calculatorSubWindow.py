@@ -115,6 +115,7 @@ class CalculatorSubWindow(NodeEditorWidget):
         contextMenu = QMenu(self)
 
         markDirtyAction = contextMenu.addAction("Mark Dirty")
+        markDirtyDescendantsAction = contextMenu.addAction("MarkDescendants Dirty")
         markInvalidAction = contextMenu.addAction("Mark Invalid")
         unmarkInvalidAction = contextMenu.addAction("Unmark Invalid")
         evalAction = contextMenu.addAction("Eval")
@@ -124,7 +125,7 @@ class CalculatorSubWindow(NodeEditorWidget):
         item = self.scene.getItemAt(event.pos())
 
         if type(item) == QGraphicsProxyWidget:
-            selected = item.widget()
+            selected = item.widget().node
 
         if hasattr(item, 'node'):
             selected = item.node
@@ -133,6 +134,15 @@ class CalculatorSubWindow(NodeEditorWidget):
 
         if DEBUG: print("CALCULATORSUBWINDOW:: -handleNodeContextMenu:: Got Item: ", selected)
 
+        if selected and action == markDirtyAction: selected.markDirty()
+        if selected and action == markInvalidAction: selected.markInvalid()
+        if selected and action == unmarkInvalidAction: selected.markInvalid(False)
+        if selected and action == markDirtyDescendantsAction: selected.markDescendeantsDirty()
+
+        if selected and action == evalAction:
+            value = selected.eval()
+
+            if DEBUG : print("CALCULATORSUBWINDOW:: -handleNodeContextMenu:: evalAction: Evaluated: ", value)
 
     def handleEdgeContextMenu(self, event):
         if DEBUG: print("CALCULATORSUBWINDOW:: -handleEdgeContextMenu:: DisplayWindow EdgeContextMenu")

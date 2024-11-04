@@ -1,4 +1,7 @@
+import os
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from nodeNode import Node
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
@@ -22,6 +25,23 @@ class CalcGraphicsNode(QDMGraphicsNode):
         self.titleHeight = 24
         self.titleHorizontalPadding = 8.0
         self.titleVerticalPadding = 10.0
+
+    def initGraphicElements(self):
+        super().initGraphicElements()
+        self.icons = QImage(os.path.join(os.path.dirname(__file__), "icons/status_icons.png"))
+
+    def paint(self, painter, QStyle, widget=None):
+        super().paint(painter, QStyle, widget)
+
+        offset = 24.0
+        if self.node.isDirty(): offset = 0.0
+        if self.node.isInvalid(): offset = 48.0
+
+        painter.drawImage(
+            QRectF(-10, -10, 24.0, 24.),
+            self.icons,
+            QRectF(offset, 0, 24.0, 24.0)
+        )
 
 class CalcNode(Node):
     icon = ""

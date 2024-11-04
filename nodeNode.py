@@ -29,6 +29,9 @@ class Node(Serializable):
         self.outputs = []
         self.initSockets(inputs, outputs)
 
+        self._isDirty = False
+        self._isInvalid = False
+
     @property
     def pos(self):
         return self.grNode.pos()
@@ -140,6 +143,67 @@ class Node(Serializable):
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+
+    def isDirty(self):
+        return self._isDirty
+
+    def markDirty(self, value = True):
+        self._isDirty = value
+        if self._isDirty: self.onMarkedDirty()
+
+    def isInvalid(self):
+        return self._isInvalid
+
+    def markInvalid(self, value = True):
+        self._isInvalid = value
+        if self._isDirty: self.onMarkedInvalid()
+
+    def onMarkedDirty(self):
+        pass
+
+    def onMarkedInvalid(self):
+        pass
+
+    def eval(self):
+        self.markDirty(False)
+        self.markInvalid(False)
+        return 0
+
+    def evalChildren(self):
+        for node in self.getChildrenNodes():
+            node.eval()
+
+    def markChildrenDirty(self, value=True):
+        for otherNode in self.getChildrenNodes():
+            otherNode.markDirty(value)
+
+    def markDescendeantsDirty(self, value = True):
+        for otherNode in self.getChildrenNodes():
+            otherNode.markDirty(value)
+            otherNode.markChildrenDirty(value)
+
+    def markChildrenInvalid(self, value=True):
+        for otherNode in self.getChildrenNodes():
+            otherNode.markInvalid(value)
+
+    def markDescendeantsInvalid(self, value = True):
+        for otherNode in self.getChildrenNodes():
+            otherNode.markInvalid(value)
+            otherNode.markChildrenInvalid(value)
+
+    def getChildrenNodes(self):
+        if self.outputs == []: return []
+
+        otherNodes = []
+
+        for index in range(len(self.outputs)):
+            for edge in self.outputs[index].edges:
+                otherNode = edge.getOtherSocket(self.outputs[index]).node
+                otherNodes.append(otherNode)
+
+        return otherNodes
+
+
 
     def serialize(self):
         inputs, outputs = [], []
