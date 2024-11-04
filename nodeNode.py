@@ -203,6 +203,34 @@ class Node(Serializable):
 
         return otherNodes
 
+    def getInput(self, index=0):
+        try:
+            edge = self.inputs[index].edges[0]
+            socket = edge.getOtherSocket(self.inputs[index])
+            return socket.node
+
+        except IndexError as e:
+            print("NODE:: EXCEPTION:: Trying to get input, but none is attached to ", self)
+            return None
+        except Exception as e:
+            dumpException(e)
+            return None
+
+    def getInputs(self, index=0):
+        inputs = []
+        for edge in self.inputs[index].edges:
+            otherSocket = edge.getOtherSocket(self.inputs[index])
+            inputs.append(otherSocket.node)
+
+        return inputs
+
+    def getOutputs(self, index = 0):
+        outputs = []
+        for edge in self.outputs[index].edges:
+            otherSocket = edge.getOtherSocket(self.outputs[index])
+            outputs.append(otherSocket.node)
+
+        return outputs
     def onEdgeConnectionChanged(self, newEdge):
         print("%s:: onEdgeConnectionChanged:: changed" % self.__class__.__name__, newEdge)
 

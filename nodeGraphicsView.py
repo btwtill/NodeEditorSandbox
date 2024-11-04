@@ -16,7 +16,7 @@ MODE_EDGE_CUT = 3
 EDGE_START_DRAG_THRESHOLD = 10
 
 #Debugging Mode
-DEBUG = True
+DEBUG = False
 
 class QDMGraphicsView(QGraphicsView):
 
@@ -345,16 +345,6 @@ class QDMGraphicsView(QGraphicsView):
     def rightMouseButtonReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
-    def deleteSelected(self):
-
-        for item in self.graphicsScene.selectedItems():
-            if isinstance(item, QDMGraphicsEdge):
-                item.edge.remove()
-            elif hasattr(item, "node"):
-                item.node.remove()
-
-        self.graphicsScene.scene.sceneHistory.storeHistory("Delete Selected", setModified = True)
-
     def getItemAtClick(self, event):
         pos = event.pos()
         obj = self.itemAt(pos)
@@ -463,6 +453,16 @@ class QDMGraphicsView(QGraphicsView):
                     edge.remove()
 
         self.graphicsScene.scene.sceneHistory.storeHistory("Cut Edge", setModified=True)
+
+    def deleteSelected(self):
+
+        for item in self.graphicsScene.selectedItems():
+            if isinstance(item, QDMGraphicsEdge):
+                item.edge.remove()
+            elif hasattr(item, "node"):
+                item.node.remove()
+
+        self.graphicsScene.scene.sceneHistory.storeHistory("Delete Selected", setModified = True)
 
     def debugModifiers(self, event):
         out = "MODS: "

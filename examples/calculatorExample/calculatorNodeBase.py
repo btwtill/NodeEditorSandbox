@@ -1,4 +1,6 @@
 import os
+from multiprocessing.managers import Value
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -8,7 +10,7 @@ from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import LEFT_CENTER, RIGHT_CENTER
 from utils import dumpException
 
-DEBUG = False
+DEBUG = True
 
 class CalcNodeContent(QDMNodeContentWidget):
     def initUI(self):
@@ -78,13 +80,16 @@ class CalcNode(Node):
 
         try:
             value = self.evaluationNodeImplementation()
-            self.markDirty(False)
-            self.markInvalid(False)
 
             return value
 
+        except ValueError as e:
+            self.markInvalid()
+            self.grNode.setToolTip(str(e))
+            self.markDescendeantsDirty()
         except Exception as e:
             self.markInvalid()
+            self.grNode.setToolTip(str(e))
             dumpException(e)
 
     def onInputChanged(self, newEdge):

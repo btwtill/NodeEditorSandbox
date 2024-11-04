@@ -1,6 +1,7 @@
 from nodeGraphicsEdge import *
 from collections import OrderedDict
 from nodeSerializable import Serializable
+from utils import dumpException
 
 EDGE_TYPE_DIRECT = 1
 EDGE_TYPE_BEZIER = 2
@@ -108,6 +109,8 @@ class Edge(Serializable):
         self.startSocket = None
 
     def remove(self):
+        oldSockets = [self.startSocket, self.endSocket]
+
         if DEBUG: print("Edge : DEBUG : removing edge", self)
         if DEBUG: print("Edge : DEBUG : removing edge from Sockets", self)
 
@@ -126,6 +129,14 @@ class Edge(Serializable):
         except ValueError:
             pass
         if DEBUG: print("Edge : DEBUG : DONE!!", self)
+
+        try:
+            for socket in oldSockets:
+                if socket and socket.node:
+                    socket.node.onEdgeConnectionChanged(self)
+                    if socket.isInput: socket.node.onInputChanged(self)
+
+        except Exception as e: dumpException(e)
 
     def __str__(self):
         return "<Edge %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])

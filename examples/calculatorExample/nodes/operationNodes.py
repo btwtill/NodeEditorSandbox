@@ -10,6 +10,11 @@ class CalcNode_Add(CalcNode):
     contentLabel = "+"
     contentLabelObjectName = "calcNodeBG"
 
+    def evaluationNodeImplementation(self):
+        self.markInvalid(False)
+        self.markDirty(False)
+        return 123
+
 @registerNode(OP_NODE_SUBSTRACT)
 class CalcNode_Subtract(CalcNode):
     icon = os.path.join(os.path.dirname(__file__), "icons/sub.png")
