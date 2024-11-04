@@ -2,9 +2,9 @@ import os
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-
 from utils import dumpException
 from calculatorConf import *
+from examples.calculatorExample.calculatorConf import CALC_NODES, getClassFromOPCode
 
 DEBUG = False
 
@@ -22,6 +22,7 @@ class QDMDragListBox(QListWidget):
         self.addDragListItems()
 
     def addDragListItems(self):
+
         keys = list(CALC_NODES.keys())
         keys.sort()
         for key in keys:

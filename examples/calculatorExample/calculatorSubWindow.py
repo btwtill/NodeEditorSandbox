@@ -1,18 +1,15 @@
-from lib2to3.fixes.fix_input import context
-
 from PyQt5.QtGui import *
 from select import select
-
+from PyQt5.QtCore import *
+from nodeNode import Node
 from nodeEdge import EDGE_TYPE_BEZIER, EDGE_TYPE_DIRECT
 from nodeEditorWidget import NodeEditorWidget
-from PyQt5.QtCore import *
 from calculatorConf import *
-from nodeNode import Node
-
+from examples.calculatorExample.calculatorConf import CALC_NODES, getClassFromOPCode
 from calculatorNodeBase import *
 from utils import dumpException
 
-DEBUG = True
+DEBUG = False
 
 class CalculatorSubWindow(NodeEditorWidget):
     def __init__(self):
@@ -167,11 +164,11 @@ class CalculatorSubWindow(NodeEditorWidget):
         contextMenu = self.initNodesContextMenu()
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
+        if DEBUG : print("CALCULATORSUBWINDOW:: -handleNewNodeContextMenu:: action: ", action)
         if action is not None:
             newCalcNode =getClassFromOPCode(action.data())(self.scene)
             scenePosition = self.scene.getView().mapToScene(event.pos())
             newCalcNode.setPosition(scenePosition.x(), scenePosition.y())
-            print("CALCULATORSUBWINDOW:: -handleNewNodeContextMenu:: Selected Node: ", newCalcNode)
 
     def contextMenuEvent(self, event):
         try:

@@ -6,6 +6,7 @@ from nodeEdge import EDGE_TYPE_BEZIER, Edge, EDGE_TYPE_DIRECT
 from nodeGraphicsCutLine import QDMCutLine
 from nodeGraphicsEdge import QDMGraphicsEdge
 from nodeGraphicsSocket import QDMGraphicsSocket
+from utils import dumpException
 
 #Constants
 MODE_NOOP = 1
@@ -15,7 +16,7 @@ MODE_EDGE_CUT = 3
 EDGE_START_DRAG_THRESHOLD = 10
 
 #Debugging Mode
-DEBUG = False
+DEBUG = True
 
 class QDMGraphicsView(QGraphicsView):
 
@@ -360,17 +361,18 @@ class QDMGraphicsView(QGraphicsView):
         return obj
 
     def edgeDragStart(self, item):
+        try:
+            if DEBUG: print("View : edgeDragStart : Start Dragging Edge")
+            if DEBUG: print("View : edgeDragStart :  assign Start Socket ")
+            #self.previousEdge = item.socket.edges
 
-        if DEBUG: print("View : edgeDragStart : Start Dragging Edge")
-        if DEBUG: print("View : edgeDragStart :  assign Start Socket ")
-        #self.previousEdge = item.socket.edges
+            self.dragStartSocket = item.socket
 
-        self.dragStartSocket = item.socket
+            #create drag edge
+            self.dragEdge = Edge(self.graphicsScene.scene, item.socket, None, EDGE_TYPE_BEZIER)
 
-        #create drag edge
-        self.dragEdge = Edge(self.graphicsScene.scene, item.socket, None, EDGE_TYPE_BEZIER)
-
-        if DEBUG : print("View : edgeDragStart : dragEdge", self.dragEdge)
+            if DEBUG : print("View : edgeDragStart : dragEdge", self.dragEdge)
+        except Exception as e: dumpException(e)
 
     def edgeDragEnd(self, item):
 
@@ -380,26 +382,32 @@ class QDMGraphicsView(QGraphicsView):
         self.dragEdge.remove()
         self.dragEdge = None
 
-        #check if item is a socket
-        if type(item) == QDMGraphicsSocket:
+        try:
+            #check if item is a socket
+            if type(item) == QDMGraphicsSocket:
 
-            #check if the socket is not the starting socket
-            if item.socket != self.dragStartSocket:
+                #check if the socket is not the starting socket
+                if item.socket != self.dragStartSocket:
 
-                #removing old connections from new Socket
-                if not item.socket.isMultiEdges:
-                    item.socket.removeAllEdges()
+                    #removing old connections from new Socket
+                    if not item.socket.isMultiEdges:
+                        item.socket.removeAllEdges()
 
-                if not self.dragStartSocket.isMultiEdges:
-                    self.dragStartSocket.removeAllEdges()
+                    if not self.dragStartSocket.isMultiEdges:
+                        self.dragStartSocket.removeAllEdges()
 
-                newEdge = Edge(self.graphicsScene.scene, self.dragStartSocket, item.socket, edgeType=EDGE_TYPE_BEZIER)
+                    newEdge = Edge(self.graphicsScene.scene, self.dragStartSocket, item.socket, edgeType=EDGE_TYPE_BEZIER)
 
-                if DEBUG : print("VIEW : edgeDragEnd : created new Edge: ", newEdge,
-                                 "connecting", newEdge.startSocket, " <----> ", newEdge.endSocket)
+                    if DEBUG : print("VIEW : edgeDragEnd : created new Edge: ", newEdge,
+                                     "connecting", newEdge.startSocket, " <----> ", newEdge.endSocket)
 
-                self.graphicsScene.scene.sceneHistory.storeHistory("Create New Edge through dragging", setModified=True)
-                return True
+                    for socket in [self.dragStartSocket, item.socket]:
+                        socket.node.onEdgeConnectionChanged(newEdge)
+                        if socket.isInput: socket.node.onInputChanged(newEdge)
+
+                    self.graphicsScene.scene.sceneHistory.storeHistory("Create New Edge through dragging", setModified=True)
+                    return True
+        except Exception as e: dumpException(e)
 
         if DEBUG : print("View : edgeDragEnd - everything done.")
         return False

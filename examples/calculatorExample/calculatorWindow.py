@@ -10,7 +10,6 @@ from utils import dumpException
 from examples.calculatorExample.calculatorSubWindow import CalculatorSubWindow
 from calculatorDragListBox import QDMDragListBox
 from utils import pp
-from examples.calculatorExample.calculatorConfNodes import *
 
 DEBUG = False
 

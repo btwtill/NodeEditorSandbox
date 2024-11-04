@@ -6,6 +6,7 @@ from nodeNode import Node
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
 from nodeSocket import LEFT_CENTER, RIGHT_CENTER
+from utils import dumpException
 
 DEBUG = False
 
@@ -53,6 +54,10 @@ class CalcNode(Node):
     def __init__(self, scene, inputs=[2, 2], outputs=[1]):
         super().__init__(scene, self.__class__.opTitle, inputs, outputs)
 
+        self.value = None
+
+        self.markDirty()
+
     def initInnerClasses(self):
         self.content = CalcNodeContent(self)
         self.grNode = CalcGraphicsNode(self)
@@ -62,6 +67,30 @@ class CalcNode(Node):
 
         self.inputSocketPosition = LEFT_CENTER
         self.outputSocketPosition = RIGHT_CENTER
+
+    def evaluationNodeImplementation(self):
+        return 123
+
+    def eval(self):
+        if not self.isDirty() and not self.isInvalid():
+            print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
+            return self.value
+
+        try:
+            value = self.evaluationNodeImplementation()
+            self.markDirty(False)
+            self.markInvalid(False)
+
+            return value
+
+        except Exception as e:
+            self.markInvalid()
+            dumpException(e)
+
+    def onInputChanged(self, newEdge):
+        if DEBUG : print("%s:: onInputChange:: _InputChanged" % __class__.__name__)
+        self.markDirty()
+        self.eval()
 
     def serialize(self):
         res = super().serialize()

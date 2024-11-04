@@ -203,7 +203,13 @@ class Node(Serializable):
 
         return otherNodes
 
+    def onEdgeConnectionChanged(self, newEdge):
+        print("%s:: onEdgeConnectionChanged:: changed" % self.__class__.__name__, newEdge)
 
+    def onInputChanged(self, newEdge):
+        print("%s:: onInputChanged:: input changed" % self.__class__.__name__, newEdge)
+        self.markDirty()
+        self.markDescendeantsDirty()
 
     def serialize(self):
         inputs, outputs = [], []
