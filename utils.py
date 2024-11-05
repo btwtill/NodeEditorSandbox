@@ -6,8 +6,7 @@ from pprint import PrettyPrinter
 
 pp = PrettyPrinter(indent=4).pprint
 
-def dumpException(e):
-    print("%s EXEPTION" % e.__class__.__name__, e)
+def dumpException(e=None):
     traceback.print_tb(e.__traceback__)
 
 def loadStyleSheet(filename):

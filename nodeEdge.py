@@ -111,33 +111,34 @@ class Edge(Serializable):
         self.endSocket = None
         self.startSocket = None
 
-    def remove(self):
+    def remove(self, silentForSocket=False):
         oldSockets = [self.startSocket, self.endSocket]
 
-        if DEBUG: print("Edge : DEBUG : removing edge", self)
-        if DEBUG: print("Edge : DEBUG : removing edge from Sockets", self)
 
-        self.removeFromSockets()
+        if DEBUG : print("EDGE:: -remove:: Hide graphicalEdge ")
+        self.grEdge.hide()
 
-        if DEBUG: print("Edge : DEBUG : removing graphical Edge from Scene", self)
-
+        if DEBUG: print("EDGE:: -remove:: Removing graphical Edge: ", self.grEdge)
         self.scene.grScene.removeItem(self.grEdge)
+        self.scene.grScene.update()
 
-        self.grEdge = None
-
-        if DEBUG: print("Edge : DEBUG : removing edge from Scene", self)
-
+        if DEBUG : print("EDGE:: -remove:: Removing Edge From Sockets ", self)
+        self.removeFromSockets()
+        if DEBUG : print("EDGE:: -remove:: Scene edge content after Socket Removal:: ", self.scene.edges)
+        if DEBUG: print("EDGE:: -remove:: remove edge from Scene", self)
         try:
             self.scene.removeEdge(self)
         except ValueError:
             pass
-        if DEBUG: print("Edge : DEBUG : DONE!!", self)
+        if DEBUG: print("EDGE:: -remove:: DONE!!", self)
 
         try:
             for socket in oldSockets:
                 if socket and socket.node:
+                    if silentForSocket is not None and socket == silentForSocket:
+                        continue
                     socket.node.onEdgeConnectionChanged(self)
-                    if socket.isInput: socket.node.onInputChanged(self)
+                    if socket.isInput: socket.node.onInputChanged(socket)
 
         except Exception as e: dumpException(e)
 
@@ -148,8 +149,8 @@ class Edge(Serializable):
         return OrderedDict([
             ("id" , self.id),
             ("edgeType", self.edgeType),
-            ("start", self.startSocket.id),
-            ("end", self.endSocket.id),
+            ("start", self.startSocket.id if self.startSocket is not None else None),
+            ("end", self.endSocket.id if self.endSocket is not None else None),
             ]
         )
 

@@ -14,6 +14,8 @@ RIGHT_BOTTOM = 6
 DEBUG = False
 
 class Socket(Serializable):
+    SocketGraphicsClass = QDMGraphicsSocket
+
     def __init__(self, node, index=0, position=LEFT_TOP, socketType = 0,
                  multiEdges = True, countOnThisNodeSide = 1, isInput = False):
         super().__init__()
@@ -27,13 +29,25 @@ class Socket(Serializable):
         self.isInput = isInput
         self.isOutput = not self.isInput
 
-        if DEBUG : print("Socket -- creating with" ,self.index, self.position, "for node", self.node)
+        if DEBUG : print("SOCKET:: --__init__:: Index:",self.index, " Position : ",
+                         self.position, " for Node : ", self.node)
 
-        self.grSocket = QDMGraphicsSocket(self, self.socketType)
+        self.grSocket = self.__class__.SocketGraphicsClass(self, self.socketType)
 
         self.setSocketPosition()
 
         self.edges = []
+
+    def delete(self):
+        self.grSocket.setParentItem(None)
+        self.node.scene.grScene.removeItem(self.grSocket)
+        del self.grSocket
+
+    def hasAnyEdge(self):
+        return len(self.edges) > 0
+
+    def isConnected(self, edge):
+        return edge in self.edges
 
     def setSocketPosition(self):
         self.grSocket.setPos(*self.node.getSocketPosition(self.index, self.position, self.countOnThisNodeSide))
@@ -53,13 +67,18 @@ class Socket(Serializable):
         self.edges.append(edge)
 
     def removeEdge(self, edge):
-        if edge in self.edges: self.edges.remove(edge)
-        else: print("!Warning", "Socket:removeEdge", "wanna remove edge", edge, "from self.edges but its not there")
 
-    def removeAllEdges(self):
+        if edge in self.edges: self.edges.remove(edge)
+        else: print("%s SOCKET:: -removeEdge:: !Warning:: " % self.node.__class__.__name__,
+                    "trying to remove edge", edge, "from self.edges but its not there, current edges:: ", self.edges)
+
+    def removeAllEdges(self, silent = False):
         while self.edges:
             edge = self.edges.pop(0)
-            edge.remove()
+            if silent:
+                edge.remove(silentForSocket=self)
+            else:
+                edge.remove()
 
     def __str__(self):
         return "<Socket %s %s..%s>" % ("ME" if self.isMultiEdges else "SE",hex(id(self))[2:5], hex(id(self))[-3:])

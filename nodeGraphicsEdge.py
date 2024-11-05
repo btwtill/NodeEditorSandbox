@@ -126,22 +126,26 @@ class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
         cpyDestination = 0
 
         if self.edge.startSocket is not None:
-            startSocketPosition = self.edge.startSocket.position
 
-            if self.posSource[0] > self.posDestination[0] and startSocketPosition in (RIGHT_TOP, RIGHT_BOTTOM) or self.posSource[0] < self.posDestination[0] and startSocketPosition in (LEFT_BOTTOM, LEFT_TOP):
+            startSocketInput = self.edge.startSocket.isInput
+            startSocketOutput = self.edge.startSocket.isOutput
+
+            if (self.posSource[0] > self.posDestination[0] and startSocketOutput or
+                    self.posSource[0] < self.posDestination[0] and startSocketInput):
+
                 cpxDestination *= -1
                 cpxSource *= -1
 
                 cpyDestination = (
                         (self.posSource[1] - self.posDestination[1]) / math.fabs(
-                    (self.posSource[1] - self.posDestination[1]) if (self.posSource[1] - self.posDestination[1]) != 0 else 0.00001
-                    )
+                    (self.posSource[1] - self.posDestination[1]) if (self.posSource[1] -
+                                                                     self.posDestination[1]) != 0 else 0.00001)
                 ) * EDGE_CP_ROUNDNESS
 
                 cpySource = (
                         (self.posDestination[1] - self.posSource[1]) / math.fabs(
-                    (self.posDestination[1] - self.posSource[1]) if (self.posDestination[1] - self.posSource[1]) != 0 else 0.00001
-                    )
+                    (self.posDestination[1] - self.posSource[1]) if (self.posDestination[1] -
+                                                                     self.posSource[1]) != 0 else 0.00001)
                 ) * EDGE_CP_ROUNDNESS
 
 

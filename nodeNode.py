@@ -1,4 +1,5 @@
 from collections import OrderedDict
+
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
@@ -8,6 +9,11 @@ from utils import dumpException
 DEBUG = False
 
 class Node(Serializable):
+
+    GraphicsNodeClass = QDMGraphicsNode
+    NodeContentClass = QDMNodeContentWidget
+    SocketClass = Socket
+
     def __init__(self, scene, title = "undifined Node", inputs = [], outputs = []):
         super().__init__()
 
@@ -50,10 +56,24 @@ class Node(Serializable):
         self.outputSocketPosition = RIGHT_TOP
         self.inputMulitEdged = False
         self.outputMultiEdged = True
+        self.socketOffsets = {
+            LEFT_BOTTOM: -1,
+            LEFT_CENTER: -1,
+            LEFT_TOP: -1,
+            RIGHT_BOTTOM: 1,
+            RIGHT_CENTER: 1,
+            RIGHT_TOP: 1,
+        }
 
     def initInnerClasses(self):
-        self.content = QDMNodeContentWidget(self)
-        self.grNode = QDMGraphicsNode(self)
+        self.content = self.getNodeContentClass()(self)
+        self.grNode = self.getGraphicsNodeClass()(self)
+
+    def getNodeContentClass(self):
+        return self.__class__.NodeContentClass
+
+    def getGraphicsNodeClass(self):
+        return self.__class__.GraphicsNodeClass
 
     def initSockets(self, inputs, outputs, reset=True):
 
@@ -66,7 +86,7 @@ class Node(Serializable):
 
         counter = 0
         for item in inputs:
-            socket = Socket(node=self, index=counter, position=self.inputSocketPosition,
+            socket = self.__class__.SocketClass(node=self, index=counter, position=self.inputSocketPosition,
                             socketType=item, multiEdges=self.inputMulitEdged,
                             countOnThisNodeSide=len(inputs), isInput=True )
             counter += 1
@@ -74,7 +94,7 @@ class Node(Serializable):
 
         counter = 0
         for item in outputs:
-            socket = Socket(node=self, index=counter, position=self.outputSocketPosition,
+            socket = self.__class__.SocketClass(node=self, index=counter, position=self.outputSocketPosition,
                             socketType=item, multiEdges=self.outputMultiEdged,
                             countOnThisNodeSide=len(outputs), isInput=False)
             counter += 1
@@ -82,7 +102,7 @@ class Node(Serializable):
 
     def getSocketPosition(self, index, position, numberOfSockets = 1):
 
-        x = 0 if position in (LEFT_TOP, LEFT_CENTER, LEFT_BOTTOM) else self.grNode.width
+        x = self.socketOffsets[position] if position in (LEFT_TOP, LEFT_CENTER, LEFT_BOTTOM) else self.grNode.width
 
         if position in (LEFT_BOTTOM, RIGHT_BOTTOM):
             y = (self.grNode.height -
@@ -139,7 +159,7 @@ class Node(Serializable):
         if DEBUG:  print("Node : DEBUG : DONE!!")
 
     def __str__(self):
-        return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+        return "<%s: %s %s..%s>" % (self.title, self.__class__.__name__,hex(id(self))[2:5], hex(id(self))[-3:])
 
     def isDirty(self):
         return self._isDirty
@@ -150,6 +170,9 @@ class Node(Serializable):
 
     def isInvalid(self):
         return self._isInvalid
+
+    def isSelected(self):
+        return self.grNode.isSelected()
 
     def markInvalid(self, value = True):
         self._isInvalid = value
@@ -164,7 +187,7 @@ class Node(Serializable):
     def doSelect(self, newState):
         self.grNode.doSelect(newState)
 
-    def eval(self):
+    def eval(self, index=0):
         self.markDirty(False)
         self.markInvalid(False)
         return 0
@@ -205,16 +228,36 @@ class Node(Serializable):
 
     def getInput(self, index=0):
         try:
-            edge = self.inputs[index].edges[0]
-            socket = edge.getOtherSocket(self.inputs[index])
-            return socket.node
-
-        except IndexError as e:
-            print("NODE:: EXCEPTION:: Trying to get input, but none is attached to ", self)
-            return None
+            inputSocket = self.inputs[index]
+            if len(inputSocket.edges) == 0: return None, None
+            connectingEdge = inputSocket.edges[0]
+            otherSocket = connectingEdge.getOtherSocket(self.inputs[index])
+            return otherSocket.node
         except Exception as e:
             dumpException(e)
             return None
+
+    def getInputWithSocket(self, index=0):
+        try:
+            inputSocket=self.inputs[index]
+            if len(inputSocket.edges) == 0: return None, None
+            connectingEdge = inputSocket.edges[0]
+            otherSocket = connectingEdge.getOtherSocket(self.inputs[index])
+            return otherSocket.node, otherSocket
+        except Exception as e:
+            dumpException(e)
+            return None, None
+
+    def getInpputWithSocketIndex(self, index=0):
+        try:
+            edge = self.inputs[index].edges[0]
+            socket = edge.getOtherSocket(self.inputs[index])
+            return socket.node, socket.index
+        except IndexError:
+            return None, None
+        except Exception as e:
+            dumpException(e)
+            return None, None
 
     def getInputs(self, index=0):
         inputs = []
@@ -234,6 +277,10 @@ class Node(Serializable):
 
     def onEdgeConnectionChanged(self, newEdge):
         if DEBUG : print("%s:: onEdgeConnectionChanged:: changed" % self.__class__.__name__, newEdge)
+        pass
+
+    def onDoubleCLicked(self, event):
+        pass
 
     def onInputChanged(self, newEdge):
         print("%s:: onInputChanged:: input changed" % self.__class__.__name__, newEdge)
@@ -272,28 +319,52 @@ class Node(Serializable):
             data['inputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000 )
             data['outputs'].sort(key=lambda socket: socket['index'] + socket['position'] * 1000)
 
-            self.inputs = []
-            self.outputs = []
             numberOfInputs = len(data['inputs'])
             numberOfOutputs = len(data['outputs'])
 
             for socketData in data['inputs']:
-                newSocket = Socket(node = self, index = socketData['index'],
-                                   position = socketData['position'],
-                                   socketType = socketData['socketType'],
-                                   countOnThisNodeSide=numberOfInputs, isInput=True)
 
-                newSocket.deserialize(socketData, hashmap, restoreId)
-                self.inputs.append(newSocket)
+                found = None
+                for socket in self.inputs:
+                    if socket.index == socketData['index']:
+                        found = socket
+                        break
+                if found is None:
+                    print("%s :: -deserialize:: Socket data has not found input socket with index:"
+                          % self.__class__.__name__, socketData['index'])
+                    print("%s :: -deserialize:: actual Socket Data: ", socketData)
+
+                    found = self.__class__.SocketClass(node = self, index = socketData['index'],
+                                       position = socketData['position'],
+                                       socketType = socketData['socketType'],
+                                       countOnThisNodeSide=numberOfInputs, isInput=True)
+
+                    self.inputs.append(found)
+                found.deserialize(socketData, hashmap, restoreId)
+
 
             for socketData in data['outputs']:
-                newSocket = Socket(node = self, index = socketData['index'],
-                                   position = socketData['position'],
-                                   socketType = socketData['socketType'],
-                                   countOnThisNodeSide=numberOfOutputs, isInput=False)
 
-                newSocket.deserialize(socketData, hashmap, restoreId)
-                self.outputs.append(newSocket)
+                found = None
+
+                for socket in self.outputs:
+                    if socket.index == socketData['index']:
+                        found = socket
+                        break
+
+                if found is None:
+                    print("%s :: -deserialize:: Socket data has not found output socket with index:"
+                          % self.__class__.__name__, socketData['index'])
+                    print("%s :: -deserialize:: actual Socket Data: ", socketData)
+
+                    found = self.__class__.SocketClass(node = self, index = socketData['index'],
+                                       position = socketData['position'],
+                                       socketType = socketData['socketType'],
+                                       countOnThisNodeSide=numberOfOutputs, isInput=False)
+
+                    self.outputs.append(found)
+                found.deserialize(socketData, hashmap, restoreId)
+
 
             if DEBUG : print("NODE : DEBUG : Hashmap...", hashmap)
         except Exception as e: dumpException(e)

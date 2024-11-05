@@ -21,21 +21,22 @@ class Scene(Serializable):
         self.nodes = []
         self.edges = []
 
-        self.sceneHistory = SceneHistory(self)
+        self.sceneWidth = 64000
+        self.sceneHeight = 64000
 
+        self._silentSelectionEvents = False
         self._hasBeenModified = False
+        self._lastSelectedItems = []
+
         self._hasBeenModifiedListeners = []
         self._itemsSelectedListeners = []
         self._itemDeselectedListeners = []
-        self._lastSelectedItems = []
-
-        self.sceneWidth = 64000
-        self.sceneHeight = 64000
 
         self.nodeClassSelector = None
 
         self.initUI()
 
+        self.sceneHistory = SceneHistory(self)
         self.clipboard = SceneClipboard(self)
 
         self.grScene.itemsSelected.connect(self.onItemSelected)
@@ -57,7 +58,12 @@ class Scene(Serializable):
         self.grScene = QDMGraphicsScene(self)
         self.grScene.setGrScene(self.sceneWidth, self.sceneHeight)
 
-    def onItemSelected(self):
+    def setSilentSelectionEvents(self, value = True):
+        self._silentSelectionEvents = value
+
+    def onItemSelected(self, silent=False):
+
+        if self._silentSelectionEvents: return
 
         if DEBUG : print("SCENE:: -onItemSelected")
 
@@ -69,10 +75,11 @@ class Scene(Serializable):
 
         if currentSelectedItems != self._lastSelectedItems:
             self._lastSelectedItems = currentSelectedItems
-            self.sceneHistory.storeHistory("SelectionChanged")
-            for callback in self._itemsSelectedListeners: callback()
+            if not silent:
+                self.sceneHistory.storeHistory("SelectionChanged")
+                for callback in self._itemsSelectedListeners: callback()
 
-    def onItemDeselected(self):
+    def onItemDeselected(self, silent = False):
 
         if DEBUG : print("SCENE:: -onItemDeselected")
 
@@ -80,8 +87,15 @@ class Scene(Serializable):
 
         if self._lastSelectedItems != []:
             self._lastSelectedItems = []
-            self.sceneHistory.storeHistory("DeselectedEverything")
-            for callback in self._itemDeselectedListeners: callback()
+            if not silent:
+                self.sceneHistory.storeHistory("DeselectedEverything")
+                for callback in self._itemDeselectedListeners: callback()
+
+    def doDeselectItems(self, silent = False):
+        for item in self.getSelectedItems():
+            item.setSelected(False)
+        if not silent:
+            self.onItemDeselected()
 
     def isModified(self):
         return self.hasBeenModified
@@ -124,11 +138,13 @@ class Scene(Serializable):
 
     def removeNode(self, node):
         if node in self.nodes: self.nodes.remove(node)
-        else: print("!Warning", "Scene::removeNode", "wanna remove node", node, "from self.nodes but its not there")
+        else: print("%s :: -removeNode:: !Warning:: trying remove node" % node.__class__.__name__,
+                    node, " from self.nodes but its not there. Current Nodes: ", self.nodes)
 
     def removeEdge(self, edge):
         if edge in self.edges: self.edges.remove(edge)
-        else: print("!Warning", "Scene::removeEdge", "wanna remove edge", edge, "from self.edge but its not there")
+        else: print("%s :: -removeEdge:: !Warning:: trying remove edge" % edge.__class__.__name__,
+                    edge, " from self.nodes but its not there. Current Nodes: ", self.edges)
 
     def clearScene(self):
         while len(self.nodes) > 0:

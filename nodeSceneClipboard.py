@@ -68,7 +68,7 @@ class SceneClipboard():
 
         view = self.scene.getView()
         mouseScenePosition = view.lastSceneMousePosition
-        minX, maxX, minY, maxY = 0,0,0,0
+        minX, maxX, minY, maxY = 10000000,10000000,10000000,10000000
 
         for nodeData in data["nodes"]:
             x,y = nodeData["pos_x"], nodeData["pos_y"]
@@ -77,25 +77,42 @@ class SceneClipboard():
             if y < minY: minY = y
             if y > maxY: maxY = y
 
-        boundingBoxCenterX = (minX + maxX) / 2
-        boundingBoxCenterY = (minY + maxY) / 2
+        maxX -= 180
+        maxY += 100
 
         #currentViewCenterPos = view.mapToScene(view.rect().center())
 
-        offsetX = mouseScenePosition.x() - boundingBoxCenterX
-        offsetY = mouseScenePosition.y() - boundingBoxCenterY
+        offsetX = (minX + maxX) / 2 - minY
+        offsetY = (minY + maxY) / 2 - minY
+
+        mouseX, mouseY = mouseScenePosition.x(), mouseScenePosition.y()
+
+        createdNodes = []
+
+        self.scene.setSilentSelectionEvents()
+        self.scene.doDeselectionItems()
 
         for nodeData in data["nodes"]:
             newNode = self.scene.getNodeClassFromData(nodeData)(self.scene)
             newNode.deserialize(nodeData, hashmap, restoreId=False)
 
-            position = newNode.pos
-            newNode.setPosition(position.x() + offsetX, position.y() + offsetY)
+            createdNodes.append(newNode)
+
+            posX, posY = newNode.pos.x(), newNode.pos.y()
+            newX, newY = mouseY + posX - minX, mouseY + posY - minY
+
+            newNode.setPosition(newX, newY)
+
+            newNode.doSelect()
 
         if "edges" in data:
             for edgeData in data["edges"]:
                 newEdge = Edge(self.scene)
                 newEdge.deserialize(edgeData, hashmap, restoreId=False)
 
+        self.scene.setSilentSelectionEvents(False)
+
         self.scene.sceneHistory.storeHistory("Pasted Elements in Scene", setModified=True)
+
+        return createdNodes
 

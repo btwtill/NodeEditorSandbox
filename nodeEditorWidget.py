@@ -14,6 +14,8 @@ from nodeSocket import Socket
 
 
 class NodeEditorWidget(QWidget):
+    SceneClass = Scene
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -30,7 +32,7 @@ class NodeEditorWidget(QWidget):
         self.setLayout(self.layout)
 
         #create Scene
-        self.scene = Scene()
+        self.scene = self.__class__.SceneClass()
 
         # crate View
         self.view = QDMGraphicsView(self.scene.grScene, self)

@@ -56,7 +56,7 @@ class QDMGraphicsNode(QGraphicsItem):
             self.node.scene.sceneHistory.storeHistory("Moved Node", setModified = True)
 
             self.node.scene.resetLastSelectedStates()
-            self._lastSelectedState = True
+            self.doSelect()
 
             self.node.scene._lastSelectedItems = self.node.scene.getSelectedItems()
 
@@ -114,7 +114,7 @@ class QDMGraphicsNode(QGraphicsItem):
         painter.drawPath(pathContent)
 
         pathOutline = QPainterPath()
-        pathOutline.addRoundedRect(0, 0, self.width, self.height, self.edgeRoundness, self.edgeRoundness)
+        pathOutline.addRoundedRect(-1, -1, self.width, self.height, self.edgeRoundness, self.edgeRoundness)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
         if self.hovered:
@@ -133,6 +133,9 @@ class QDMGraphicsNode(QGraphicsItem):
     def hoverLeaveEvent(self, event):
         self.hovered = False
         self.update()
+
+    def mouseDoubleClickEvent(self, event):
+        self.node.onDoubleClicked(event)
 
     def onSelected(self):
         self.node.scene.grScene.itemsSelected.emit()

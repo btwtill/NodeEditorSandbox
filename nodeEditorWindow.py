@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QLabel, QApplicat
 
 from nodeEditorWidget import NodeEditorWidget
 
-DEBUG = True
+DEBUG = False
 
 class NodeEditorWindow(QMainWindow):
     def __init__(self):
