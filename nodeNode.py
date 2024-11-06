@@ -342,7 +342,6 @@ class Node(Serializable):
                     self.inputs.append(found)
                 found.deserialize(socketData, hashmap, restoreId)
 
-
             for socketData in data['outputs']:
 
                 found = None

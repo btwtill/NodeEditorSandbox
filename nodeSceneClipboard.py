@@ -115,4 +115,3 @@ class SceneClipboard():
         self.scene.sceneHistory.storeHistory("Pasted Elements in Scene", setModified=True)
 
         return createdNodes
-
