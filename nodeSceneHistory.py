@@ -12,6 +12,8 @@ class SceneHistory():
         self.clear()
         self.historyLimit = 32
 
+        self.undoSelectionHasChanged = False
+
         self._historyModifiedListeners = []
         self._historyStoredListeners = []
         self._historyRestoredListeners = []
@@ -92,40 +94,59 @@ class SceneHistory():
 
         if DEBUG : print("HISTORY : DEBUG : Current Selected history Stamp Items", self.scene.grScene.selectedItems())
 
-        selectedObjects = {
-            'nodes' : [],
-            'edges' : [],
-        }
-
-        for item in self.scene.grScene.selectedItems():
-            if hasattr(item, 'node'):
-                selectedObjects['nodes'].append(item.node.id)
-            elif isinstance(item, QDMGraphicsEdge):
-                selectedObjects['edges'].append(item.edge.id)
-
         historyStamp = {
             'desc' : desc,
             'snapshot' : self.scene.serialize(),
-            'selection' : selectedObjects,
+            'selection' : self.captureCurrentSelection(),
         }
 
         return historyStamp
 
+    def captureCurrentSelection(self):
+        selectedObjects = {
+            'nodes': [],
+            'edges': [],
+        }
+        for item in self.scene.grScene.selectedItems():
+            if hasattr(item, 'node'): selectedObjects['nodes'].append(item.node.id)
+            elif hasattr(item, 'edge'): selectedObjects['edges'].append(item.edge.id)
+        return selectedObjects
+
     def restoreHistoryStamp(self, historyStamp):
 
-        self.scene.deserialize(historyStamp['snapshot'])
+
         try:
+            self.undoSelectionHasChanged = False
+            previouseSelection = self.captureCurrentSelection()
+            if DEBUG : print("SCENEHISTORY:: --restoehistoryStamp:: Selected Nodes Before Restoring Stamp ",
+                             previouseSelection['nodes'])
+            self.scene.deserialize(historyStamp['snapshot'])
+
+            for edge in self.scene.edges: edge.grEdge.setSelected(False)
+
             for edgeId in historyStamp['selection']['edges']:
                 for edge in self.scene.edges:
                     if edge.id == edgeId:
                         edge.grEdge.setSelected(True)
                         break
 
+            for node in self.scene.nodes: node.grNode.setSelected(False)
+
             for nodeId in historyStamp['selection']['nodes']:
                 for node in self.scene.nodes:
                     if node.id == nodeId:
                         node.grNode.setSelected(True)
                         break
+
+            currentSelection = self.captureCurrentSelection()
+            if DEBUG : print("SCENEHISTORY:: --restoehistoryStamp:: Selected Nodes After Restoring Stamp ",
+                             currentSelection['nodes'])
+
+            if (currentSelection['nodes'] != previouseSelection['nodes'] or
+                currentSelection['edges'] != previouseSelection['edges']):
+                if DEBUG : print("SCENEHISTORY:: --restoehistoryStamp:: Selection has Changed")
+                self.undoSelectionHasChanged = True
+
         except Exception as e: dumpException(e)
 
         if DEBUG : print("HISTORY : DEBUG : Restore : ", historyStamp)

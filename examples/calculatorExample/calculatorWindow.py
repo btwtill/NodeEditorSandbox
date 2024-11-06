@@ -202,7 +202,7 @@ class Calculator(NodeEditorWindow):
 
     def onFileOpen(self):
         fnames, filter = QFileDialog.getOpenFileNames(self, ' Open graph from file',
-                                                      self.getFileDialogDirectory(), self.getFileDialogFilter)
+                                                      self.getFileDialogDirectory(), self.getFileDialogFilter())
         try:
             for fname in fnames:
                 if fname:

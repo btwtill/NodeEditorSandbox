@@ -18,6 +18,8 @@ class QDMGraphicsSocket(QGraphicsItem):
 
         self.socket = socket
 
+        self.isHighlighted = False
+
         self.radius = 6
         self.outlineWidth = 1
 
@@ -41,15 +43,19 @@ class QDMGraphicsSocket(QGraphicsItem):
     def initGraphicsAssets(self):
         self.colorBackground = self.getSocketColor(self.socketType)
         self.colorOutline = QColor("#FF000000")
+        self.highlightedColor = QColor("#FF37A6FF")
 
         self.pen = QPen(self.colorOutline)
         self.pen.setWidth(self.outlineWidth)
+        self.penHighlighted = QPen(self.highlightedColor)
+        self.penHighlighted.setWidthF(2.0)
+
         self.brush = QBrush(self.colorBackground)
 
     def paint(self, painter , QStyleOptionGraphicsItem, widget = None):
 
         painter.setBrush(self.brush)
-        painter.setPen(self.pen)
+        painter.setPen(self.pen if not self.isHighlighted else self.penHighlighted)
 
         painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
 

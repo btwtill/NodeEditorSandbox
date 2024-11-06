@@ -13,7 +13,7 @@ MODE_NOOP = 1
 MODE_EDGEDRAG = 2
 MODE_EDGE_CUT = 3
 
-EDGE_START_DRAG_THRESHOLD = 10
+EDGE_START_DRAG_THRESHOLD = 50
 
 #Debugging Mode
 DEBUG = False
@@ -96,20 +96,20 @@ class QDMGraphicsView(QGraphicsView):
         scenePosition = self.mapToScene(event.pos())
 
         if self.mode == MODE_EDGEDRAG:
-            if self.dragEdge is not None:
+            if self.dragEdge is not None and self.dragEdge.grEdge is not None:
                 self.dragEdge.grEdge.setDestination(scenePosition.x(), scenePosition.y())
                 self.dragEdge.grEdge.update()
 
             else:
                 print("GRAPHICSVIEW:: -MouseMoveEvent:: Want to update self.dragedge grEdge, but it is None")
 
-        if self.mode == MODE_EDGE_CUT:
+        if self.mode == MODE_EDGE_CUT and self.cutline is not None:
             self.cutline.linePoints.append(scenePosition)
             self.cutline.update()
 
         self.lastSceneMousePosition = scenePosition
 
-        self.scenePosChanged.emit(int(scenePosition.x(), scenePosition.y()))
+        self.scenePosChanged.emit(int(scenePosition.x()), int(scenePosition.y()))
 
         super().mouseMoveEvent(event)
 
@@ -176,29 +176,48 @@ class QDMGraphicsView(QGraphicsView):
 
     def middleMouseButtonPress(self, event):
 
+        # Debug Item under mouse
+        item = self.getItemAtClick(event)
+
+        if DEBUG:
+            if isinstance(item, QDMGraphicsEdge): print("GRAPHICSVIEW:: -middleMouseButtonPress:: EDGE:: "
+                                                        ,item.edge, "connecting", item.edge.startSocket,
+                                                        " <----> ", item.edge.endSocket)
+            if isinstance(item == QDMGraphicsSocket):
+                print("GRAPHICSVIEW:: -middleMouseButtonPress:: SOCKET:: ", item.socket,
+                                                      " has Edges: ", "None" if item.socket.edges == [] else "")
+                if item.socket.edges:
+                    for edge in item.socket.edges:
+                        print("GRAPHICSVIEW:: -middleMouseButtonPress:: \t ", edge)
+
+            if item == None:
+                print("GRAPHICSVIEW:: -middleMouseButtonPress:: Scene: ")
+                print("GRAPHICSVIEW:: -middleMouseButtonPress:: \tNodes: ")
+                for item in self.graphicsScene.scene.nodes:
+                    print("GRAPHICSVIEW:: -middleMouseButtonPress:: \t \t", item)
+                print("GRAPHICSVIEW:: -middleMouseButtonPress:: \tEdges: ")
+                for item in self.graphicsScene.scene.edges:
+                    print("GRAPHICSVIEW:: -middleMouseButtonPress:: \t \t", item)
+
+            if event.modifiers() & Qt.Modifier.CTRL:
+                print("GRAPHICSVIEW:: -middleMouseButtonPress:: Graphic Items: ")
+                for item in self.graphicsScene.items():
+                    print("GRAPHICSVIEW:: -middleMouseButtonPress:: \t ", item)
+
+        if DEBUG and item is None:
+            print("GRAPHICSVIEW:: -middleMouseButtonPress SCENE::")
+            print("GRAPHICSVIEW:: -middleMouseButtonPress NODES:: ")
+            for node in self.graphicsScene.scene.nodes: print("GRAPHICSVIEW:: -middleMouseButtonPress ", node)
+            print("GRAPHICSVIEW:: -middleMouseButtonPress EDGES:: ")
+            for edge in self.graphicsScene.scene.edges: print("GRAPHICSVIEW:: -middleMouseButtonPress ",
+                                                              edge, "\n\tgrEdge:: ",
+                                                              edge.grEdge if edge.grEdge is not None else None)
+
         #fake event, Release Middle Mouse button or any mouse button
         releaseEvent = QMouseEvent(QEvent.Type.MouseButtonRelease, event.localPos(), event.screenPos(),
                                    Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, event.modifiers())
         super().mouseReleaseEvent(releaseEvent)
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-
-        #Debug Item under mouse
-        item = self.getItemAtClick(event)
-        if DEBUG:
-            if isinstance(item, QDMGraphicsEdge): print("RMB : DEBUG : ", item.edge, "connecting",
-                                                        item.edge.startSocket, " <----> ", item.edge.endSocket)
-            if type(item) == QDMGraphicsSocket: print("RMB : DEBUG : ", item.socket, "has Edges", item.socket.edges)
-
-            if item == None:
-                print("View : DEBUG : Scene: ")
-                print("     Nodes: ")
-                for item in self.graphicsScene.scene.nodes:
-                    print("         ", item)
-                print("     Edges: ")
-                for item in self.graphicsScene.scene.edges:
-                    print("         ", item)
-            elif type(item) == QDMGraphicsEdge:
-                print("View : DEBUG : Edge : ")
 
         #imiting that it would be a left mouse button klick event
         fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.MouseButton.LeftButton,
@@ -275,68 +294,70 @@ class QDMGraphicsView(QGraphicsView):
     def leftMouseButtonReleaseEvent(self, event):
 
 
+        try:
+            # retrieve and store the item that was clicked on in the canvas
+            item = self.getItemAtClick(event)
 
-        # retrieve and store the item that was clicked on in the canvas
-        item = self.getItemAtClick(event)
+            #check if the clicked item was of type node, edge or none
+            if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
+                #activate the ctrl key behavior if the shift key is pressed
+                if event.modifiers() & Qt.Modifier.SHIFT:
 
-        #check if the clicked item was of type node, edge or none
-        if hasattr(item, "node") or isinstance(item, QDMGraphicsEdge) or item == None:
-            #activate the ctrl key behavior if the shift key is pressed
-            if event.modifiers() & Qt.Modifier.SHIFT:
+                    event.ignore()
+                    fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
+                                            Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
+                                            event.modifiers() | Qt.Modifier.CTRL)
+                    super().mouseReleaseEvent(fakeEvent)
+                    return
 
-                event.ignore()
-                fakeEvent = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
-                                        Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton,
-                                        event.modifiers() | Qt.Modifier.CTRL)
-                super().mouseReleaseEvent(fakeEvent)
+            # if there is an edge beeing dragged
+            if self.mode == MODE_EDGEDRAG:
+
+                #and the distance between the click and release checks out end the dragging
+                if self.distanceBetweenClickAndReleaseIsOff(event):
+                    res = self.edgeDragEnd(item)
+                    if res: return
+
+            if self.mode == MODE_EDGE_CUT:
+                self.cutIntersectingEdges()
+                self.cutline.linePoints = []
+                self.cutline.update()
+                QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+                self.mode = MODE_NOOP
                 return
 
-        # if there is an edge beeing dragged
-        if self.mode == MODE_EDGEDRAG:
+            if self.rubberBandDraggingRectangle:
+                self.rubberBandDraggingRectangle = False
 
-            #and the distance between the click and release checks out end the dragging
-            if self.distanceBetweenClickAndReleaseIsOff(event):
-                res = self.edgeDragEnd(item)
-                if res: return
-
-        if self.mode == MODE_EDGE_CUT:
-            self.cutIntersectingEdges()
-            self.cutline.linePoints = []
-            self.cutline.update()
-            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
-            self.mode = MODE_NOOP
-            return
-
-        if self.rubberBandDraggingRectangle:
-            self.rubberBandDraggingRectangle = False
-
-            currentSelectedItems = self.graphicsScene.selectedItems()
-
-            if DEBUG:
-                print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: lastSelectedItems = ",
-                      self.graphicsScene.scene._lastSelectedItems)
-                print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: Current SelectedItems = ",
-                      currentSelectedItems)
-
-
-            if currentSelectedItems != self.graphicsScene.scene._lastSelectedItems:
-                if currentSelectedItems == []:
-                    self.graphicsScene.itemsDeselected.emit()
-                else:
-                    self.graphicsScene.itemsSelected.emit()
-
-                self.graphicsScene.scene._lastSelectedItems = currentSelectedItems
+                currentSelectedItems = self.graphicsScene.selectedItems()
 
                 if DEBUG:
-                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: lastSelectedItems = ",
+                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: lastSelectedItems = ",
                           self.graphicsScene.scene._lastSelectedItems)
-                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: Current SelectedItems = ",
+                    print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: Before:: Current SelectedItems = ",
                           currentSelectedItems)
 
-            return
 
-        if item is None:
-            self.graphicsScene.itemsDeselected.emit()
+                if currentSelectedItems != self.graphicsScene.scene._lastSelectedItems:
+                    if currentSelectedItems == []:
+                        self.graphicsScene.itemsDeselected.emit()
+                    else:
+                        self.graphicsScene.itemsSelected.emit()
+
+                    self.graphicsScene.scene._lastSelectedItems = currentSelectedItems
+
+                    if DEBUG:
+                        print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: lastSelectedItems = ",
+                              self.graphicsScene.scene._lastSelectedItems)
+                        print("GRAPHICSVIEW:: -LeftMouseButtonReleaseEvent:: After:: Current SelectedItems = ",
+                              currentSelectedItems)
+
+                return
+
+            if item is None:
+                self.graphicsScene.itemsDeselected.emit()
+
+        except Exception as e: dumpException(e)
 
         super().mouseReleaseEvent(event)
 
@@ -381,11 +402,12 @@ class QDMGraphicsView(QGraphicsView):
                 if item.socket != self.dragStartSocket:
 
                     #removing old connections from new Socket
-                    if not item.socket.isMultiEdges:
-                        item.socket.removeAllEdges()
-
-                    if not self.dragStartSocket.isMultiEdges:
-                        self.dragStartSocket.removeAllEdges()
+                    for socket in (item.socket, self.dragStartSocket):
+                        if not socket.isMultiEdges:
+                            if socket.isInput:
+                                socket.removeAllEdges(silent=True)
+                            else:
+                                socket.removeAlleEdges(silent=False)
 
                     newEdge = Edge(self.graphicsScene.scene, self.dragStartSocket, item.socket, edgeType=EDGE_TYPE_BEZIER)
 

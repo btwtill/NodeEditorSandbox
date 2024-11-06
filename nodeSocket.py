@@ -43,6 +43,8 @@ class Socket(Serializable):
         if self.socketType != newSocketType:
             self.socketType = newSocketType
             self.grSocket.changeSocketType()
+            return True
+        return False
 
     def delete(self):
         self.grSocket.setParentItem(None)
@@ -87,7 +89,9 @@ class Socket(Serializable):
                 edge.remove()
 
     def __str__(self):
-        return "<Socket %s %s..%s>" % ("ME" if self.isMultiEdges else "SE",hex(id(self))[2:5], hex(id(self))[-3:])
+        return "<Socket #%d %s %s..%s>" % (
+            self.index, "ME" if self.isMultiEdges else "SE", hex(id(self))[2:5], hex(id(self))[-3:]
+        )
 
     def determinMultiEdges(self, data):
         if 'isMultiEdge' in data:
@@ -110,6 +114,7 @@ class Socket(Serializable):
 
         if restoreId : self.id = data['id']
         self.isMultiEdges = self.determinMultiEdges(data)
+        self.changeSocketType(data['socketType'])
         hashmap[data['id']] = self
 
         return True

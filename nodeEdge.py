@@ -139,7 +139,7 @@ class Edge(Serializable):
         except Exception as e: dumpException(e)
 
     def __str__(self):
-        return "<Edge %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+        return "<Edge %s..%s -- S:%s E:%s>" % (hex(id(self))[2:5], hex(id(self))[-3:], self.startSocket, self.endSocket)
 
     def serialize(self):
         return OrderedDict([

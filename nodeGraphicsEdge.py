@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from nodeSocket import RIGHT_TOP, RIGHT_BOTTOM, LEFT_BOTTOM, LEFT_TOP
 
+DEBUG = False
 
 EDGE_CP_ROUNDNESS = 100
 
@@ -30,7 +31,7 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.setZValue(-1)
 
     def initGraphicElements(self):
-        self.color = QColor("#001000")
+        self.color = self.defaultColor = QColor("#001000")
         self.colorSelected = QColor("#FFFF7700")
         self.colorHovered = QColor("#FFFFAA39")
 
@@ -67,6 +68,19 @@ class QDMGraphicsEdge(QGraphicsPathItem):
             painter.setPen(self.pen if not self.isSelected() else self.penSelected)
 
         painter.drawPath(self.path())
+
+    def changeColor(self, color):
+        if DEBUG : print("GRAPHICSEDGE:: -changeColor:: Changing Edge Color to: ",
+                         color.red(), color.green(), color.blue(), "on Edge: ", self.edge)
+        self.color = QColor(color) if type(color) == str else color
+        self.pen = QPen(self.color)
+        self.pen.setWidthF(3.0)
+
+    def setColorFromSockets(self):
+        socketTypeStart = self.edge.startSocket.socketType
+        socketTypeEnd = self.edge.endSocket.socketType
+        if socketTypeStart != socketTypeEnd: return False
+        self.changeColor(self.edge.startSocket.grSocket.getSocketColor(socketTypeStart))
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)

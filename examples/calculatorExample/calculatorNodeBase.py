@@ -75,6 +75,10 @@ class CalcNode(Node):
         input1 = self.getInput(0)
         input2 = self.getInput(1)
 
+        if DEBUG : print("CALCNODE:: -evaluationNodeImplementation:: Current Inputs:: Input 1: ", input1)
+        if DEBUG : print("CALCNODE:: -evaluationNodeImplementation:: Current Inputs:: Input 2: ", input2)
+
+
         if  input1 is None or input2 is None:
             self.markDirty()
             self.markDescendeantsDirty()

@@ -1,7 +1,6 @@
 from types import new_class
 
 from PyQt5.QtGui import *
-from requests.packages import target
 from select import select
 from PyQt5.QtCore import *
 

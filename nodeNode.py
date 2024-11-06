@@ -1,6 +1,4 @@
 from collections import OrderedDict
-from distutils.command.install_egg_info import install_egg_info
-
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
 from nodeGraphicsNode import QDMGraphicsNode
@@ -81,31 +79,6 @@ class Node(Serializable):
     def getGraphicsNodeClass(self):
         return self.__class__.GraphicsNodeClass
 
-    def initSockets(self, inputs, outputs, reset=True):
-
-        if reset:
-            if hasattr(self, 'inputs') and hasattr(self, 'outputs'):
-                for socket in (self.inputs + self.outputs):
-                    self.scene.grScene.removeItem(socket.grSocket)
-                self.inputs = []
-                self.outputs = []
-
-        counter = 0
-        for item in inputs:
-            socket = self.__class__.SocketClass(node=self, index=counter, position=self.inputSocketPosition,
-                            socketType=item, multiEdges=self.inputMulitEdged,
-                            countOnThisNodeSide=len(inputs), isInput=True )
-            counter += 1
-            self.inputs.append(socket)
-
-        counter = 0
-        for item in outputs:
-            socket = self.__class__.SocketClass(node=self, index=counter, position=self.outputSocketPosition,
-                            socketType=item, multiEdges=self.outputMultiEdged,
-                            countOnThisNodeSide=len(outputs), isInput=False)
-            counter += 1
-            self.outputs.append(socket)
-
     def getSocketPosition(self, index, position, numberOfSockets = 1):
 
         x = self.socketOffsets[position] if position in (LEFT_TOP, LEFT_CENTER, LEFT_BOTTOM) else self.grNode.width
@@ -140,6 +113,36 @@ class Node(Serializable):
             y = 0
 
         return [x, y]
+
+    def getSocketScenePosition(self, socket):
+        nodePosition = self.grNode.pos()
+        socketPosition = self.getSocketPosition(socket.index, socket.position, socket.countOnThisNodeSide)
+        return (nodePosition.x() + socketPosition[0], nodePosition.y() + socketPosition[1])
+
+    def initSockets(self, inputs, outputs, reset=True):
+
+        if reset:
+            if hasattr(self, 'inputs') and hasattr(self, 'outputs'):
+                for socket in (self.inputs + self.outputs):
+                    self.scene.grScene.removeItem(socket.grSocket)
+                self.inputs = []
+                self.outputs = []
+
+        counter = 0
+        for item in inputs:
+            socket = self.__class__.SocketClass(node=self, index=counter, position=self.inputSocketPosition,
+                            socketType=item, multiEdges=self.inputMulitEdged,
+                            countOnThisNodeSide=len(inputs), isInput=True )
+            counter += 1
+            self.inputs.append(socket)
+
+        counter = 0
+        for item in outputs:
+            socket = self.__class__.SocketClass(node=self, index=counter, position=self.outputSocketPosition,
+                            socketType=item, multiEdges=self.outputMultiEdged,
+                            countOnThisNodeSide=len(outputs), isInput=False)
+            counter += 1
+            self.outputs.append(socket)
 
     def setPosition(self, x, y):
         self.grNode.setPos(x, y)
@@ -190,6 +193,9 @@ class Node(Serializable):
     def onMarkedInvalid(self):
         pass
 
+    def onDeserialized(self, data):
+        pass
+
     def doSelect(self, newState):
         self.grNode.doSelect(newState)
 
@@ -235,7 +241,7 @@ class Node(Serializable):
     def getInput(self, index=0):
         try:
             inputSocket = self.inputs[index]
-            if len(inputSocket.edges) == 0: return None, None
+            if len(inputSocket.edges) == 0: return None
             connectingEdge = inputSocket.edges[0]
             otherSocket = connectingEdge.getOtherSocket(self.inputs[index])
             return otherSocket.node

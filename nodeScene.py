@@ -76,8 +76,9 @@ class Scene(Serializable):
         if currentSelectedItems != self._lastSelectedItems:
             self._lastSelectedItems = currentSelectedItems
             if not silent:
-                self.sceneHistory.storeHistory("SelectionChanged")
                 for callback in self._itemsSelectedListeners: callback()
+                self.sceneHistory.storeHistory("SelectionChanged")
+
 
     def onItemDeselected(self, silent = False):
 
@@ -138,13 +139,13 @@ class Scene(Serializable):
 
     def removeNode(self, node):
         if node in self.nodes: self.nodes.remove(node)
-        else: print("%s :: -removeNode:: !Warning:: trying remove node" % node.__class__.__name__,
+        else: print("SCENE:: -removeNode:: %s ::  !Warning:: trying remove node" % node.__class__.__name__,
                     node, " from self.nodes but its not there. Current Nodes: ", self.nodes)
 
     def removeEdge(self, edge):
         if edge in self.edges: self.edges.remove(edge)
-        else: print("%s :: -removeEdge:: !Warning:: trying remove edge" % edge.__class__.__name__,
-                    edge, " from self.nodes but its not there. Current Nodes: ", self.edges)
+        else: print("SCENE:: -removeEdges:: %s :: !Warning:: trying remove edge" % edge.__class__.__name__,
+                    edge, " from self.edges but its not there. Current Edges: ", self.edges)
 
     def clearScene(self):
         while len(self.nodes) > 0:
@@ -201,15 +202,47 @@ class Scene(Serializable):
 
     def deserialize(self, data, hashmap = {}, restoreId = True):
 
-        self.clearScene()
         hashmap = {}
 
-        if restoreId : self.id = data['id']
+        if restoreId: self.id = data['id']
+
+        allNodes = self.nodes.copy()
 
         for nodeData in data["nodes"]:
-            self.getNodeClassFromData(nodeData)(self).deserialize(nodeData, hashmap, restoreId)
+            found = False
+            for node in allNodes:
+                if node.id == nodeData['id']:
+                    found = node
+                    break
+            if not found:
+                newNode = self.getNodeClassFromData(nodeData)(self)
+                newNode.deserialize(nodeData, hashmap, restoreId)
+                newNode.onDeserialized(nodeData)
+            else:
+                found.deserialize(nodeData, hashmap, restoreId)
+                found.onDeserialized(nodeData)
+                allNodes.remove(found)
+
+        while allNodes != []:
+            node = allNodes.pop()
+            node.remove()
+
+        allEdges = self.edges.copy()
 
         for edgeData in data["edges"]:
-            Edge(self).deserialize(edgeData, hashmap, restoreId)
+            found = False
+            for edge in allEdges:
+                if edge.id == edgeData['id']:
+                    found = edge
+                    break
+            if not found:
+                newEdge = Edge(self).deserialize(edgeData, hashmap, restoreId)
+            else:
+                found.deserialize(edgeData, hashmap, restoreId)
+                allEdges.remove(found)
+
+        while allEdges != []:
+            edge = allEdges.pop()
+            edge.remove()
 
         return True
