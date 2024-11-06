@@ -52,16 +52,15 @@ class CalcNode(Node):
     contentLabel = ""
     contentLabelObjectName = "CalcNodeBG"
 
+    GraphicsNodeClass = CalcGraphicsNode
+    NodeContentClass = CalcNodeContent
+
     def __init__(self, scene, inputs=[2, 2], outputs=[1]):
         super().__init__(scene, self.__class__.opTitle, inputs, outputs)
 
         self.value = None
 
         self.markDirty()
-
-    def initInnerClasses(self):
-        self.content = CalcNodeContent(self)
-        self.grNode = CalcGraphicsNode(self)
 
     def initSettings(self):
         super().initSettings()
@@ -113,7 +112,7 @@ class CalcNode(Node):
             self.grNode.setToolTip(str(e))
             dumpException(e)
 
-    def onInputChanged(self, newEdge):
+    def onInputChanged(self, socket=None):
         if DEBUG : print("%s:: onInputChange:: _InputChanged" % __class__.__name__)
         self.markDirty()
         self.eval()

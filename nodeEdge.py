@@ -102,16 +102,10 @@ class Edge(Serializable):
         self.grEdge.update()
 
     def removeFromSockets(self):
-        # @TODO: Fix me
-        #if self.startSocket is not None:
-        #    self.startSocket.removeEdge(None)
-        #if self.endSocket is not None:
-        #    self.endSocket.removeEdge(None)
-
         self.endSocket = None
         self.startSocket = None
 
-    def remove(self, silentForSocket=False):
+    def remove(self, silentForSocket=False, silent=False):
         oldSockets = [self.startSocket, self.endSocket]
 
 
@@ -135,6 +129,8 @@ class Edge(Serializable):
         try:
             for socket in oldSockets:
                 if socket and socket.node:
+                    if silent:
+                        continue
                     if silentForSocket is not None and socket == silentForSocket:
                         continue
                     socket.node.onEdgeConnectionChanged(self)

@@ -24,16 +24,17 @@ class QDMGraphicsView(QGraphicsView):
 
     def __init__(self, graphicsScene, parent = None):
         super().__init__(parent)
-
         self.graphicsScene = graphicsScene
-        self.rubberBandDraggingRectangle = False
 
         self.initUI()
 
+        self.setScene(self.graphicsScene)
+
         self.mode = MODE_NOOP
         self.editingFlag = False
+        self.rubberBandDraggingRectangle = False
 
-        self.setScene(self.graphicsScene)
+        self.lastSceneMousePosition = QPoint(0,0)
 
         self.zoomInFactor = 1.25
         self.zoomClamp = True
@@ -92,23 +93,23 @@ class QDMGraphicsView(QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
+        scenePosition = self.mapToScene(event.pos())
 
         if self.mode == MODE_EDGEDRAG:
-            pos = self.mapToScene(event.pos())
-            self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
-            self.dragEdge.grEdge.update()
+            if self.dragEdge is not None:
+                self.dragEdge.grEdge.setDestination(scenePosition.x(), scenePosition.y())
+                self.dragEdge.grEdge.update()
+
+            else:
+                print("GRAPHICSVIEW:: -MouseMoveEvent:: Want to update self.dragedge grEdge, but it is None")
 
         if self.mode == MODE_EDGE_CUT:
-            pos = self.mapToScene(event.pos())
-            self.cutline.linePoints.append(pos)
+            self.cutline.linePoints.append(scenePosition)
             self.cutline.update()
 
-        self.lastSceneMousePosition = self.mapToScene(event.pos())
+        self.lastSceneMousePosition = scenePosition
 
-        self.scenePosChanged.emit(
-            int(self.lastSceneMousePosition.x()),
-            int(self.lastSceneMousePosition.y())
-        )
+        self.scenePosChanged.emit(int(scenePosition.x(), scenePosition.y()))
 
         super().mouseMoveEvent(event)
 
@@ -240,7 +241,7 @@ class QDMGraphicsView(QGraphicsView):
                 return
 
         #when the type is of socket start dragging an edge
-        if type(item) == QDMGraphicsSocket:
+        if isinstance(item, QDMGraphicsSocket):
             #only if not already in drag mode or cut mode
             if self.mode == MODE_NOOP:
                 self.mode = MODE_EDGEDRAG
@@ -369,12 +370,12 @@ class QDMGraphicsView(QGraphicsView):
         self.mode = MODE_NOOP
 
         if DEBUG: print("View : edgeDragEnd : end Dragging Edge")
-        self.dragEdge.remove()
+        self.dragEdge.remove(silent=True)
         self.dragEdge = None
 
         try:
             #check if item is a socket
-            if type(item) == QDMGraphicsSocket:
+            if isinstance(item, QDMGraphicsSocket):
 
                 #check if the socket is not the starting socket
                 if item.socket != self.dragStartSocket:
@@ -393,7 +394,7 @@ class QDMGraphicsView(QGraphicsView):
 
                     for socket in [self.dragStartSocket, item.socket]:
                         socket.node.onEdgeConnectionChanged(newEdge)
-                        if socket.isInput: socket.node.onInputChanged(newEdge)
+                        if socket.isInput: socket.node.onInputChanged(socket)
 
                     self.graphicsScene.scene.sceneHistory.storeHistory("Create New Edge through dragging", setModified=True)
                     return True

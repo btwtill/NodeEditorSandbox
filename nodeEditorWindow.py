@@ -10,6 +10,8 @@ from nodeEditorWidget import NodeEditorWidget
 DEBUG = False
 
 class NodeEditorWindow(QMainWindow):
+    NodeEditorWidgetClass = NodeEditorWidget
+
     def __init__(self):
         super().__init__()
 
@@ -23,19 +25,22 @@ class NodeEditorWindow(QMainWindow):
         self.createActions()
         self.createMenus()
 
-        self.nodeEditor = NodeEditorWidget(self)
+        self.nodeEditor = self.__class__.NodeEditorWidgetClass(self)
         self.nodeEditor.scene.addHasBeenModifiedListener(self.setTitle)
 
         self.setCentralWidget(self.nodeEditor)
         self.createStatusBar()
 
         #set inital Window size
-        self.setGeometry(200, 200, 800, 600)
+        #self.setGeometry(200, 200, 800, 600)
 
         self.setTitle()
 
         # display
         self.show()
+
+    def sizeHint(self):
+        return QSize(800, 600)
 
     def createStatusBar(self):
 
@@ -71,7 +76,10 @@ class NodeEditorWindow(QMainWindow):
                                     statusTip='Delete Currently Selected Items', triggered=self.onEditDelete)
 
     def createMenus(self):
+        self.createFileMenu()
+        self.createEditMenu()
 
+    def createFileMenu(self):
         menuBar = self.menuBar()
 
         self.fileMenu = menuBar.addMenu('&File')
@@ -82,6 +90,9 @@ class NodeEditorWindow(QMainWindow):
         self.fileMenu.addAction(self.actionSaveAs)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.actionExit)
+
+    def createEditMenu(self):
+        menuBar = self.menuBar()
 
         self.editMenu = menuBar.addMenu('&Edit')
         self.editMenu.addAction(self.actionUndo)
@@ -111,7 +122,8 @@ class NodeEditorWindow(QMainWindow):
     def onFileOpen(self):
         if self.maybeSave():
             if DEBUG : print("Window : DEBUG : Open")
-            fname, filter = QFileDialog.getOpenFileName(self, ' Open graph from file')
+            fname, filter = QFileDialog.getOpenFileName(self, ' Open graph from file',
+                                                        self.getFileDialogDirectory(), self.getFileDialogFilter())
             if fname == '':
                 return
             if os.path.isfile(fname):
@@ -139,7 +151,8 @@ class NodeEditorWindow(QMainWindow):
         currentNodeEditor = self.getCurrentNodeEditorWidget()
         if currentNodeEditor is not None:
 
-            fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File')
+            fname, filter = QFileDialog.getSaveFileName(self, 'Save graph to File',
+                                                        self.getFileDialogDirectory(), self.getFileDialogFilter())
 
             if fname == '': return False
 
@@ -196,13 +209,19 @@ class NodeEditorWindow(QMainWindow):
                 print("JSON does not contain any nodes!")
                 return
 
-            self.getCurrentNodeEditorWidget().scene.clipboard.deserializeFromClipboard(data)
+            return self.getCurrentNodeEditorWidget().scene.clipboard.deserializeFromClipboard(data)
 
     def isModified(self):
         return self.getCurrentNodeEditorWidget().scene.isModified()
 
     def getCurrentNodeEditorWidget(self):
         return self.centralWidget()
+
+    def getFileDialogDirectory(self):
+        return ''
+
+    def getFileDialogFilter(self):
+        return 'Graph (*.json);;All files (*)'
 
     def closeEvent(self, event):
         if self.maybeSave():

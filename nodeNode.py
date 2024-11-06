@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from distutils.command.install_egg_info import install_egg_info
 
 from nodeSerializable import Serializable
 from nodeContentWidget import QDMNodeContentWidget
@@ -19,6 +20,9 @@ class Node(Serializable):
 
         self._title = title
         self.scene = scene
+
+        self.content = None
+        self.grNode = None
 
         self.initInnerClasses()
         self.initSettings()
@@ -66,8 +70,10 @@ class Node(Serializable):
         }
 
     def initInnerClasses(self):
-        self.content = self.getNodeContentClass()(self)
-        self.grNode = self.getGraphicsNodeClass()(self)
+        nodeContentClass = self.getNodeContentClass()
+        nodeGraphicsClass = self.getGraphicsNodeClass()
+        if nodeContentClass is not None: self.content = nodeContentClass(self)
+        if nodeGraphicsClass is not None: self.grNode = nodeGraphicsClass(self)
 
     def getNodeContentClass(self):
         return self.__class__.NodeContentClass
@@ -293,6 +299,8 @@ class Node(Serializable):
         for socket in self.inputs: inputs.append(socket.serialize())
         for socket in self.outputs: outputs.append(socket.serialize())
 
+        serializedContent = self.content.serialize() if isinstance(self.content, Serializable) else {}
+
         return OrderedDict([
             ("id" , self.id),
             ("title", self._title),
@@ -300,7 +308,7 @@ class Node(Serializable):
             ("pos_y", self.grNode.scenePos().y()),
             ("inputs", inputs),
             ("outputs", outputs),
-            ("content", self.content.serialize()),
+            ("content", serializedContent),
             ]
         )
 
@@ -368,6 +376,8 @@ class Node(Serializable):
             if DEBUG : print("NODE : DEBUG : Hashmap...", hashmap)
         except Exception as e: dumpException(e)
 
-        result = self.content.deserialize(data['content'], hashmap)
+        if isinstance(self.content, Serializable):
+            result = self.content.deserialize(data['content'], hashmap)
+            return result
 
-        return True & result
+        return True

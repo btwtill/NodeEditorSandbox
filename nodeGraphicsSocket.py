@@ -13,22 +13,30 @@ SOCKET_COLOR = [
 ]
 
 class QDMGraphicsSocket(QGraphicsItem):
-    def __init__(self, socket, socketType = 0):
-        self.socket = socket
+    def __init__(self, socket):
         super().__init__(socket.node.grNode)
 
+        self.socket = socket
 
         self.radius = 6
         self.outlineWidth = 1
-        self.socketType = socketType
 
         self.initGraphicsAssets()
 
+    @property
+    def socketType(self):
+        return self.socket.socketType
 
     def getSocketColor(self, key):
         if type(key) == int : return SOCKET_COLOR[key]
         if type(key) == str : return QColor(key)
         return Qt.transparent
+
+    def changeSocketType(self):
+
+        self.colorBackground = self.getSocketColor(self.socketType)
+        self.brush = QBrush(self.colorBackground)
+        self.update()
 
     def initGraphicsAssets(self):
         self.colorBackground = self.getSocketColor(self.socketType)

@@ -201,7 +201,8 @@ class Calculator(NodeEditorWindow):
         except Exception as e: dumpException(e)
 
     def onFileOpen(self):
-        fnames, filter = QFileDialog.getOpenFileNames(self, ' Open graph from file')
+        fnames, filter = QFileDialog.getOpenFileNames(self, ' Open graph from file',
+                                                      self.getFileDialogDirectory(), self.getFileDialogFilter)
         try:
             for fname in fnames:
                 if fname:
@@ -264,3 +265,6 @@ class Calculator(NodeEditorWindow):
         else:
             self.writeSettings()
             event.accept()
+
+            #import sys
+            #sys.exit(0)

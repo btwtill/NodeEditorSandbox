@@ -109,3 +109,21 @@ class NodeEditorWidget(QWidget):
         edge3 = Edge(self.scene, node.outputs[0], node3.inputs[1], edgeType=EDGE_TYPE_BEZIER)
 
         self.scene.sceneHistory.storeInitialHistoryStamp()
+
+    def addCustomNode(self):
+        from nodeContentWidget import QDMNodeContentWidget
+        from nodeSerializable import Serializable
+
+        class NNodeContent(QLabel):
+            def __init__(self,node, parent = None):
+                super().__init__("foobar")
+                self.node = node
+                self.setParent(parent)
+
+        class NNode(Node):
+            NodeContentClass = NNodeContent
+
+        self.scnee.setNodeClassSelector(lambda data: NNode)
+        node = NNode(self.scene, "A Custom Node 1", inputs=[0, 1, 2])
+
+        print("NODEEDITORWIDGET:: -addCustomNode:: Node Content:: ", node.content)

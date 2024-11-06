@@ -10,7 +10,6 @@ class QDMGraphicsNode(QGraphicsItem):
         super().__init__(parent)
 
         self.node = node
-        self.content = self.node.content
 
         self.hovered = False
         self._wasMoved = False
@@ -23,10 +22,15 @@ class QDMGraphicsNode(QGraphicsItem):
 
     @property
     def title(self): return self._title
+
     @title.setter
     def title(self, value):
         self._title = value
         self.titleItem.setPlainText(self._title)
+
+    @property
+    def content(self):
+        return self.node.content if self.node else None
 
     def initUI(self):
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -180,13 +184,14 @@ class QDMGraphicsNode(QGraphicsItem):
         self.titleItem.setPos(self.titleHorizontalPadding, 0)
 
     def initContent(self):
-        self.grContent = QGraphicsProxyWidget(self)
 
-        self.content.setGeometry(self.edgePadding,
-                                 self.titleHeight + self.edgePadding,
-                                 self.width - 2 * self.edgePadding,
-                                 self.height - 2 * self.edgePadding - self.titleHeight)
+        if self.content is not None:
+            self.content.setGeometry(self.edgePadding,
+                                     self.titleHeight + self.edgePadding,
+                                     self.width - 2 * self.edgePadding,
+                                     self.height - 2 * self.edgePadding - self.titleHeight)
 
-        self.grContent.setWidget(self.content)
+        self.grContent = self.node.scene.grScene.addWidget(self.content)
+        self.grContent.setParentItem(self)
 
 

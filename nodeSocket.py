@@ -1,3 +1,4 @@
+from distutils.ccompiler import new_compiler
 from idlelib.configdialog import is_int
 
 from nodeGraphicsSocket import QDMGraphicsSocket
@@ -32,11 +33,16 @@ class Socket(Serializable):
         if DEBUG : print("SOCKET:: --__init__:: Index:",self.index, " Position : ",
                          self.position, " for Node : ", self.node)
 
-        self.grSocket = self.__class__.SocketGraphicsClass(self, self.socketType)
+        self.grSocket = self.__class__.SocketGraphicsClass(self)
 
         self.setSocketPosition()
 
         self.edges = []
+
+    def changeSocketType(self, newSocketType):
+        if self.socketType != newSocketType:
+            self.socketType = newSocketType
+            self.grSocket.changeSocketType()
 
     def delete(self):
         self.grSocket.setParentItem(None)

@@ -1,4 +1,7 @@
+from types import new_class
+
 from PyQt5.QtGui import *
+from requests.packages import target
 from select import select
 from PyQt5.QtCore import *
 
@@ -16,7 +19,7 @@ DEBUG = False
 class CalculatorSubWindow(NodeEditorWidget):
     def __init__(self):
         super().__init__()
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        #self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.setTitle()
 
@@ -176,6 +179,22 @@ class CalculatorSubWindow(NodeEditorWidget):
         if selected and action == bezierAction: selected.edgeType = EDGE_TYPE_BEZIER
         if selected and action == directAction: selected.edgeType = EDGE_TYPE_DIRECT
 
+    def determinTargetSocketOfNodes(self, wasDraggedFlag, newCalcNode):
+
+        targetSocket = None
+
+        if wasDraggedFlag:
+            if len(newCalcNode.inputs) > 0: targetSocket = newCalcNode.inputs[0]
+        else:
+            if len(newCalcNode.outpus) > 0: targetSocket = newCalcNode.outpus[0]
+
+        return targetSocket
+
+    def finishNewNodeState(self, newCalcNode):
+        self.scene.doDeselectItems()
+        newCalcNode.grNode.doSelect(True)
+        newCalcNode.grNode.onSelected()
+
     def handleNewNodeContextMenu(self, event):
         if DEBUG: print("CALCULATORSUBWINDOW:: -handleNewNodeContextMenu:: DisplayWindow NewNodeContextMenu ")
 
@@ -189,10 +208,11 @@ class CalculatorSubWindow(NodeEditorWidget):
             newCalcNode.setPosition(scenePosition.x(), scenePosition.y())
 
             if self.scene.getView().mode == MODE_EDGEDRAG:
-                self.scene.getView().edgeDragEnd(newCalcNode.inputs[0].grSocket)
+                targetSocket = self.determinTargetSocketOfNodes(MODE_EDGEDRAG, newCalcNode)
 
-                newCalcNode.doSelect(True)
-                #newCalcNode.inputs[0].edges[-1].doSelect(True)
+                if targetSocket is not None:
+                    self.scene.getView().edgeDragEnd(targetSocket.grSocket)
+                    self.finishNewNodeState(newCalcNode)
 
             else:
                 self.scene.sceneHistory.storeHistory("Created %s " % newCalcNode.__class__.__name__)
