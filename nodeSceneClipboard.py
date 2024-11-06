@@ -90,7 +90,7 @@ class SceneClipboard():
         createdNodes = []
 
         self.scene.setSilentSelectionEvents()
-        self.scene.doDeselectionItems()
+        self.scene.doDeselectItems()
 
         for nodeData in data["nodes"]:
             newNode = self.scene.getNodeClassFromData(nodeData)(self.scene)

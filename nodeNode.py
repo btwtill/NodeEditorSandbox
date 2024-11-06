@@ -196,7 +196,7 @@ class Node(Serializable):
     def onDeserialized(self, data):
         pass
 
-    def doSelect(self, newState):
+    def doSelect(self, newState=True):
         self.grNode.doSelect(newState)
 
     def eval(self, index=0):
@@ -295,7 +295,7 @@ class Node(Serializable):
         pass
 
     def onInputChanged(self, newEdge):
-        print("%s:: onInputChanged:: input changed" % self.__class__.__name__, newEdge)
+        if DEBUG: print("%s:: onInputChanged:: input changed" % self.__class__.__name__, newEdge)
         self.markDirty()
         self.markDescendeantsDirty()
 

@@ -207,10 +207,12 @@ class CalculatorSubWindow(NodeEditorWidget):
             newCalcNode.setPosition(scenePosition.x(), scenePosition.y())
 
             if self.scene.getView().mode == MODE_EDGEDRAG:
-                targetSocket = self.determinTargetSocketOfNodes(MODE_EDGEDRAG, newCalcNode)
+                targetSocket = self.determinTargetSocketOfNodes(
+                    self.scene.getView().dragging.dragStartSocket.isOutput, newCalcNode
+                )
 
                 if targetSocket is not None:
-                    self.scene.getView().edgeDragEnd(targetSocket.grSocket)
+                    self.scene.getView().dragging.edgeDragEnd(targetSocket.grSocket)
                     self.finishNewNodeState(newCalcNode)
 
             else:

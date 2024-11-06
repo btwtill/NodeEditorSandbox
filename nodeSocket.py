@@ -1,5 +1,3 @@
-from distutils.ccompiler import new_compiler
-from idlelib.configdialog import is_int
 
 from nodeGraphicsSocket import QDMGraphicsSocket
 from collections import OrderedDict

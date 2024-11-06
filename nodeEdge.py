@@ -20,7 +20,9 @@ class Edge(Serializable):
 
         self.startSocket = startSocket
         self.endSocket = endSocket
-        self.edgeType = edgeType
+        self._edgeType = edgeType
+
+        self.grEdge = self.createEdgeClassInstance()
 
         self.scene.addEdge(self)
 
@@ -55,26 +57,29 @@ class Edge(Serializable):
 
     @property
     def edgeType(self): return self._edgeType
+
     @edgeType.setter
     def edgeType(self, value):
         #If there is a graphical edge to it remove it from the graphics scene
-
-        if hasattr(self, 'grEdge') and self.grEdge is not None:
-            if DEBUG : print("EDGE : DEBUG : has gredge ")
-            self.scene.grScene.removeItem(self.grEdge)
-
         self._edgeType = value
-        if self.edgeType == EDGE_TYPE_DIRECT:
-            self.grEdge = QDMGraphicsEdgeDirect(self)
-        elif self.edgeType == EDGE_TYPE_BEZIER:
-            self.grEdge = QDMGraphicsEdgeBezier(self)
-        else:
-            self.grEdge = QDMGraphicsEdgeBezier(self)
+        print(self.grEdge)
+        self.grEdge.createEdgePathCalculator()
 
+        if self.startSocket is not None:
+            self.updatePositions()
+
+    def getGraphicsEdgeClass(self):
+        return QDMGraphicsEdge
+
+    def createEdgeClassInstance(self):
+
+        self.grEdge = self.getGraphicsEdgeClass()(self)
         self.scene.grScene.addItem(self.grEdge)
 
         if self.startSocket is not None:
             self.updatePositions()
+
+        return self.grEdge
 
     def getOtherSocket(self, knownSocket):
         return self.startSocket if knownSocket == self.endSocket else self.endSocket
@@ -156,6 +161,7 @@ class Edge(Serializable):
 
         self.startSocket = hashmap[data['start']]
         self.endSocket = hashmap[data['end']]
+        print(data)
         self.edgeType = data['edgeType']
 
         return True

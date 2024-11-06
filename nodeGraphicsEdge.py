@@ -1,19 +1,21 @@
-import math
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from nodeSocket import RIGHT_TOP, RIGHT_BOTTOM, LEFT_BOTTOM, LEFT_TOP
+from nodeGraphicsEdgePath import GraphicsEdgePathDirect, GraphicsEdgePathBezier
 
 DEBUG = False
 
-EDGE_CP_ROUNDNESS = 100
 
 class QDMGraphicsEdge(QGraphicsPathItem):
     def __init__(self, edge, parent=None):
         super().__init__(parent)
 
         self.edge = edge
+
+        self.pathCalculator = self.determineEdgePathClass()(self)
+        #if DEBUG: print("GRAPHICSEDGE:: __init__:: path Calculator:: ", self.pathCalculator)
 
         self._lastSelectedState = False
         self.hovered = False
@@ -47,6 +49,10 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.penDragged = QPen(self.color)
         self.penDragged.setWidthF(2.0)
         self.penDragged.setStyle(Qt.PenStyle.DashLine)
+
+    def createEdgePathCalculator(self):
+        self.pathCalculator = self.determineEdgePathClass()(self)
+        return self.pathCalculator
 
     def boundingRect(self):
         return self.shape().boundingRect()
@@ -98,9 +104,21 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.hovered = False
         self.update()
 
+    def determineEdgePathClass(self):
+
+        from nodeEdge import EDGE_TYPE_BEZIER, EDGE_TYPE_DIRECT
+        if self.edge.edgeType == EDGE_TYPE_BEZIER:
+            return GraphicsEdgePathBezier
+        if self.edge.edgeType == EDGE_TYPE_DIRECT:
+            return GraphicsEdgePathDirect
+        else:
+            return GraphicsEdgePathBezier
+
     def calculatePath(self):
         #Method to draw the path from a to b
-        raise NotImplemented("This method has to to be overriden in a child class")
+        #if DEBUG :  print("GRAPHICSEDGE:: --calculatePath:: PathCalculator::", self.pathCalculator)
+        #if DEBUG : print("GRAPHICSEDGE:: --calculatePath:: result:: ", self.pathCalculator.calcPath())
+        return self.pathCalculator.calcPath()
 
     def onSelected(self):
         self.edge.scene.grScene.itemsSelected.emit()
@@ -123,50 +141,3 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.posDestination = [x, y]
 
 
-class QDMGraphicsEdgeDirect(QDMGraphicsEdge):
-    def calculatePath(self):
-        path = QPainterPath(QPointF(self.posSource[0], self.posSource[1]))
-        path.lineTo(self.posDestination[0], self.posDestination[1])
-        return path
-
-class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
-    def calculatePath(self):
-
-        dist = (self.posDestination[0] - self.posSource[0]) * 0.5
-
-        cpxSource = +dist
-        cpxDestination = -dist
-        cpySource = 0
-        cpyDestination = 0
-
-        if self.edge.startSocket is not None:
-
-            startSocketInput = self.edge.startSocket.isInput
-            startSocketOutput = self.edge.startSocket.isOutput
-
-            if (self.posSource[0] > self.posDestination[0] and startSocketOutput or
-                    self.posSource[0] < self.posDestination[0] and startSocketInput):
-
-                cpxDestination *= -1
-                cpxSource *= -1
-
-                cpyDestination = (
-                        (self.posSource[1] - self.posDestination[1]) / math.fabs(
-                    (self.posSource[1] - self.posDestination[1]) if (self.posSource[1] -
-                                                                     self.posDestination[1]) != 0 else 0.00001)
-                ) * EDGE_CP_ROUNDNESS
-
-                cpySource = (
-                        (self.posDestination[1] - self.posSource[1]) / math.fabs(
-                    (self.posDestination[1] - self.posSource[1]) if (self.posDestination[1] -
-                                                                     self.posSource[1]) != 0 else 0.00001)
-                ) * EDGE_CP_ROUNDNESS
-
-
-        path = QPainterPath(QPointF(self.posSource[0], self.posSource[1]))
-
-        path.cubicTo(self.posSource[0] + cpxSource, self.posSource[1] + cpySource,
-                     self.posDestination[0] + cpxDestination, self.posDestination[1] + cpyDestination,
-                     self.posDestination[0], self.posDestination[1])
-
-        return path

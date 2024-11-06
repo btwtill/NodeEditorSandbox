@@ -26,7 +26,7 @@ class Scene(Serializable):
 
         self._silentSelectionEvents = False
         self._hasBeenModified = False
-        self._lastSelectedItems = []
+        self._lastSelectedItems = None
 
         self._hasBeenModifiedListeners = []
         self._itemsSelectedListeners = []
@@ -79,14 +79,17 @@ class Scene(Serializable):
                 for callback in self._itemsSelectedListeners: callback()
                 self.sceneHistory.storeHistory("SelectionChanged")
 
-
     def onItemDeselected(self, silent = False):
 
         if DEBUG : print("SCENE:: -onItemDeselected")
 
+        currentSelectedItems = self.getSelectedItems()
+        if currentSelectedItems == self._lastSelectedItems:
+            return
+
         self.resetLastSelectedStates()
 
-        if self._lastSelectedItems != []:
+        if currentSelectedItems == []:
             self._lastSelectedItems = []
             if not silent:
                 self.sceneHistory.storeHistory("DeselectedEverything")
@@ -103,6 +106,15 @@ class Scene(Serializable):
 
     def getSelectedItems(self):
         return self.grScene.selectedItems()
+
+    def getEdgeClass(self):
+        return Edge
+
+    def getNodeById(self, nodeID):
+        for node in self.nodes:
+            if node.id == nodeID:
+                return node
+        return None
 
     def addHasBeenModifiedListener(self, callback):
         self._hasBeenModifiedListeners.append(callback)
@@ -182,6 +194,9 @@ class Scene(Serializable):
 
         return Node if self.nodeClassSelector is None else self.nodeClassSelector(nodeData)
 
+    def getEdgeClass(self):
+        return Edge
+
     def serialize(self):
         nodes, edges = [], []
 
@@ -236,7 +251,7 @@ class Scene(Serializable):
                     found = edge
                     break
             if not found:
-                newEdge = Edge(self).deserialize(edgeData, hashmap, restoreId)
+                newEdge = self.getEdgeClass()(self).deserialize(edgeData, hashmap, restoreId)
             else:
                 found.deserialize(edgeData, hashmap, restoreId)
                 allEdges.remove(found)

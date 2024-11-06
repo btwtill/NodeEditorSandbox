@@ -1,5 +1,3 @@
-from idlelib.iomenu import encoding
-from plistlib import InvalidFileException
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -13,9 +11,10 @@ from nodeScene import Scene, InvalidFile
 from nodeSocket import Socket
 
 
+
 class NodeEditorWidget(QWidget):
     SceneClass = Scene
-
+    GraphicsViewClass = QDMGraphicsView
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -35,7 +34,7 @@ class NodeEditorWidget(QWidget):
         self.scene = self.__class__.SceneClass()
 
         # crate View
-        self.view = QDMGraphicsView(self.scene.grScene, self)
+        self.view = self.__class__.GraphicsViewClass(self.scene.grScene, self)
         self.layout.addWidget(self.view)
 
     def isFileNameSet(self):

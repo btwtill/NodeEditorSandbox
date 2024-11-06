@@ -139,8 +139,10 @@ class SceneHistory():
                         break
 
             currentSelection = self.captureCurrentSelection()
-            if DEBUG : print("SCENEHISTORY:: --restoehistoryStamp:: Selected Nodes After Restoring Stamp ",
+            if DEBUG : print("SCENEHISTORY:: --restorehistoryStamp:: Selected Nodes After Restoring Stamp ",
                              currentSelection['nodes'])
+
+            self.scene._lastSelectedItems = self.scene.getSelectedItems()
 
             if (currentSelection['nodes'] != previouseSelection['nodes'] or
                 currentSelection['edges'] != previouseSelection['edges']):
